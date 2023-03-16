@@ -2,19 +2,20 @@ use std::path::Path;
 
 use image::GenericImageView;
 
-use term2d::model::color::Color;
+use model::state::State;
 use term2d::model::event::Event;
 use term2d::model::image::Image;
 use term2d::model::key::Key;
-use term2d::model::point::Point;
-use term2d::model::rgba::Rgba;
 use term2d::view::canvas::halfblock::HalfblockCanvas;
-use term2d::view::canvas::Canvas;
+use view::renderer::Renderer;
+
+pub mod controller;
+pub mod model;
+pub mod view;
 
 struct Controller {
-    frame: u32,
-    canvas: HalfblockCanvas,
-    img: Image,
+    renderer: Renderer,
+    state: State,
 }
 
 impl term2d::controller::Controller<HalfblockCanvas> for Controller {
@@ -29,28 +30,15 @@ impl term2d::controller::Controller<HalfblockCanvas> for Controller {
             Event::Elapse => {}
         }
 
-        self.canvas.clear();
+        self.renderer.display(&self.state);
 
-        self.canvas.draw_text(
-            &Point::new(2, 0),
-            &Color {
-                fg: Rgba::white(),
-                bg: Rgba::transparent(),
-            },
-            &format!("press 'q' to quit, frame: {}", self.frame),
-        );
-        self.canvas.draw_pixel(&Point::new(10, 7), &Rgba::red());
-        self.canvas.draw_image(&Point::new(30, 3), &mut self.img);
-
-        self.canvas.display();
-
-        self.frame += 1;
+        self.state.frame += 1;
 
         true
     }
 
     fn get_canvas(&mut self) -> &mut HalfblockCanvas {
-        &mut self.canvas
+        &mut self.renderer.canvas
     }
 }
 
@@ -64,10 +52,9 @@ fn load_image_raw<T: AsRef<Path>>(path: T) -> (u32, u32, Vec<u8>) {
 fn main() {
     let img_raw = load_image_raw("data/flowers.png");
     let img = Image::from(img_raw);
-    let controller = Controller {
-        frame: 0,
-        canvas: HalfblockCanvas::new(),
-        img,
-    };
+
+    let renderer = Renderer::new();
+    let state = State { frame: 0, img };
+    let controller = Controller { renderer, state };
     term2d::run(controller);
 }
