@@ -10,6 +10,8 @@ use term2d::view::canvas::halfblock::HalfblockCanvas;
 use crate::model::state::State;
 use crate::view::renderer::Renderer;
 
+mod wfc;
+
 pub struct Controller {
     renderer: Renderer,
     state: State,
