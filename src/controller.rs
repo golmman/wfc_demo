@@ -10,7 +10,7 @@ use term2d::view::canvas::halfblock::HalfblockCanvas;
 use crate::model::state::State;
 use crate::view::renderer::Renderer;
 
-mod wfc;
+pub mod wfc;
 
 pub struct Controller {
     renderer: Renderer,
@@ -19,7 +19,7 @@ pub struct Controller {
 
 impl Controller {
     pub fn new() -> Self {
-        let img_raw = load_image_raw("data/flowers.png");
+        let img_raw = wfc::run("data/flowers.png", 3, 3);
         let img = Image::from(img_raw);
 
         let renderer = Renderer::new();
