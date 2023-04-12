@@ -1,8 +1,6 @@
 use std::path::Path;
 
-use log::error;
 use log::info;
-use term2d::model::rgba::Rgba;
 
 pub type RawImage = (u32, u32, Vec<u8>);
 
@@ -22,11 +20,12 @@ fn extract_patterns<T: AsRef<Path>>(
     path: T,
     pattern_width: u32,
     pattern_height: u32,
-) -> Vec<Vec<u8>> {
-    let patterns = Vec::new();
+) -> Vec<Vec<u32>> {
+    let mut patterns = Vec::new();
 
     //let (image_width, image_height, image) = helper::load_image_raw("data/flowers.png");
-    let (image_width, image_height, image) = helper::load_image_as_8bit("data/flowers.png");
+    //let (image_width, image_height, image) = helper::load_image_as_8bit("data/flowers.png");
+    let (image_width, image_height, image_data) = helper::load_image("data/flowers.png");
 
     let image_width = image_width as i32;
     let image_height = image_height as i32;
@@ -38,27 +37,27 @@ fn extract_patterns<T: AsRef<Path>>(
     let top = 1 - pattern_height;
     let bottom = image_height + pattern_height - 1;
 
-    let mut debug_count = 0;
-
     for image_y in left..image_width {
         for image_x in top..image_height {
+            patterns.push(vec![0; (pattern_width * pattern_height) as usize]);
+            let patterns_last = patterns.len() - 1;
+
             for pattern_y in 0..pattern_width {
                 for pattern_x in 0..pattern_width {
                     let scan_x = helper::euclidean_remainder(image_x + pattern_x, image_width);
                     let scan_y = helper::euclidean_remainder(image_y + pattern_y, image_height);
-                    let index = 4 * (image_width * scan_y + scan_x);
+                    let image_index = (image_width * scan_y + scan_x) as usize;
+                    let pattern_index = (pattern_width * pattern_y + pattern_x) as usize;
 
-                    debug_count += 1;
+                    patterns[patterns_last][pattern_index] = image_data[image_index];
                 }
             }
         }
     }
 
-    info!("hey");
-    info!("len {}", image.len());
-    info!("w {}", image_width);
-    info!("h {}", image_height);
-    info!("debug_count {}", debug_count);
+    info!("image width: {}", image_width);
+    info!("image height: {}", image_height);
+    info!("number of patterns: {}", patterns.len());
 
     patterns
 }
@@ -94,6 +93,25 @@ mod helper {
         (width, height, raw)
     }
 
+    pub fn load_image<T: AsRef<Path>>(path: T) -> (u32, u32, Vec<u32>) {
+        let (width, height, raw32bit) = load_image_raw(path);
+        let mut data = vec![0; (width * height) as usize];
+
+        for y in 0..height {
+            for x in 0..width {
+                let i = (width * y + x) as usize;
+                let rgba = (raw32bit[4 * i] as u32)
+                    | (raw32bit[4 * i + 1] as u32) << 8
+                    | (raw32bit[4 * i + 2] as u32) << 16
+                    | (raw32bit[4 * i + 3] as u32) << 24;
+
+                data[i] = rgba;
+            }
+        }
+
+        (width, height, data)
+    }
+
     pub fn load_image_as_8bit<T: AsRef<Path>>(path: T) -> RawImage {
         let (width, height, raw32bit) = load_image_raw(path);
 
@@ -109,10 +127,10 @@ mod helper {
             for x in 0..width {
                 let i = (width * y + x) as usize;
                 let rgba = RawRgba(
-                    raw32bit[i],
-                    raw32bit[i + 1],
-                    raw32bit[i + 2],
-                    raw32bit[i + 3],
+                    raw32bit[4 * i],
+                    raw32bit[4 * i + 1],
+                    raw32bit[4 * i + 2],
+                    raw32bit[4 * i + 3],
                 );
 
                 if let Some(&color_index) = compressed_image.color_map.indices.get(&rgba) {
