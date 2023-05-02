@@ -2,11 +2,13 @@ use std::path::Path;
 
 use log::info;
 
+use crate::model::pattern_data::PatternData;
+
 pub type RawImage = (u32, u32, Vec<u8>);
 
 pub fn run<T: AsRef<Path>>(path: T, pattern_width: u32, pattern_height: u32) -> RawImage {
-    extract_patterns(path, pattern_width, pattern_height);
-    build_propagator();
+    let pattern_data = extract_patterns(path, pattern_width, pattern_height);
+    build_propagator(pattern_data);
 
     for i in 0..10 {
         observe();
@@ -20,17 +22,12 @@ fn extract_patterns<T: AsRef<Path>>(
     path: T,
     pattern_width: u32,
     pattern_height: u32,
-) -> Vec<Vec<u32>> {
+) -> PatternData {
     let mut patterns = Vec::new();
 
     //let (image_width, image_height, image) = helper::load_image_raw("data/flowers.png");
     //let (image_width, image_height, image) = helper::load_image_as_8bit("data/flowers.png");
     let (image_width, image_height, image_data) = helper::load_image("data/flowers.png");
-
-    let image_width = image_width as i32;
-    let image_height = image_height as i32;
-    let pattern_width = pattern_width as i32;
-    let pattern_height = pattern_height as i32;
 
     for image_y in 0..image_width {
         for image_x in 0..image_height {
@@ -39,8 +36,8 @@ fn extract_patterns<T: AsRef<Path>>(
 
             for pattern_y in 0..pattern_width {
                 for pattern_x in 0..pattern_width {
-                    let scan_x = helper::euclidean_remainder(image_x + pattern_x, image_width);
-                    let scan_y = helper::euclidean_remainder(image_y + pattern_y, image_height);
+                    let scan_x = (image_x + pattern_x) % image_width;
+                    let scan_y = (image_y + pattern_y) % image_height;
                     let image_index = (image_width * scan_y + scan_x) as usize;
                     let pattern_index = (pattern_width * pattern_y + pattern_x) as usize;
 
@@ -56,10 +53,18 @@ fn extract_patterns<T: AsRef<Path>>(
     info!("image height: {}", image_height);
     info!("number of patterns: {}", patterns.len());
 
-    patterns
+    PatternData {
+        patterns,
+        image_height,
+        image_width,
+        pattern_height,
+        pattern_width,
+    }
 }
 
-fn build_propagator() {}
+fn build_propagator(pattern_data: PatternData) -> () {
+    ()
+}
 
 fn observe() {}
 
@@ -151,12 +156,12 @@ mod helper {
         image_8bit
     }
 
-    pub fn euclidean_remainder(dividend: i32, divisor: i32) -> i32 {
+    pub fn euclidean_remainder(dividend: i32, divisor: i32) -> u32 {
         // modulo function but with euclidiean division, see https://en.wikipedia.org/wiki/Modulo#Variants_of_the_definition
         let mut remainder = dividend % divisor;
         if remainder < 0 {
             remainder += divisor.abs();
         }
-        remainder
+        remainder as u32
     }
 }
