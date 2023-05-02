@@ -32,13 +32,8 @@ fn extract_patterns<T: AsRef<Path>>(
     let pattern_width = pattern_width as i32;
     let pattern_height = pattern_height as i32;
 
-    let left = 1 - pattern_width;
-    let right = image_width + pattern_width - 1;
-    let top = 1 - pattern_height;
-    let bottom = image_height + pattern_height - 1;
-
-    for image_y in left..image_width {
-        for image_x in top..image_height {
+    for image_y in 0..image_width {
+        for image_x in 0..image_height {
             patterns.push(vec![0; (pattern_width * pattern_height) as usize]);
             let patterns_last = patterns.len() - 1;
 
@@ -55,6 +50,8 @@ fn extract_patterns<T: AsRef<Path>>(
         }
     }
 
+    info!("pattern width: {}", pattern_width);
+    info!("pattern height: {}", pattern_height);
     info!("image width: {}", image_width);
     info!("image height: {}", image_height);
     info!("number of patterns: {}", patterns.len());
