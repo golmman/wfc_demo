@@ -2,7 +2,7 @@ use std::path::Path;
 
 use log::info;
 
-use crate::model::pattern_data::PatternData;
+use crate::model::{pattern_data::PatternData, pattern_propagator::PatternPropagator};
 
 pub type RawImage = (u32, u32, Vec<u8>);
 
@@ -51,7 +51,7 @@ fn extract_patterns<T: AsRef<Path>>(
     info!("pattern height: {}", pattern_height);
     info!("image width: {}", image_width);
     info!("image height: {}", image_height);
-    info!("number of patterns: {}", patterns.len());
+    info!("number of patterns: {} (should equal image_w * image_h)", patterns.len());
 
     PatternData {
         patterns,
@@ -63,6 +63,7 @@ fn extract_patterns<T: AsRef<Path>>(
 }
 
 fn build_propagator(pattern_data: PatternData) -> () {
+    PatternPropagator::new(pattern_data);
     ()
 }
 
