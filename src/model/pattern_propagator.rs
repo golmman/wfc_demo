@@ -2,6 +2,14 @@ use log::info;
 
 use super::pattern_data::PatternData;
 
+//pub const CURSOR_SAVE: &'static str = "\x1b 7";
+//pub const CURSOR_RESET: &'static str = "\x1b 8";
+pub const CURSOR_SAVE: &'static str = "\x1b[s";
+pub const CURSOR_RESET: &'static str = "\x1b[u";
+
+pub const CURSOR_MOVE_LEFT: &'static str = "\x1b[9D";
+
+
 pub struct PatternAdjacency {
     pub pattern: Vec<u32>,
     pub weight: u32,
@@ -11,26 +19,26 @@ pub struct PatternAdjacency {
 
 pub struct PatternPropagator {
     pattern_data: PatternData,
-    pattern_neighborhoods: Vec<PatternAdjacency>,
+    pattern_adjacencies: Vec<PatternAdjacency>,
 }
 
 impl PatternPropagator {
     pub fn new(pattern_data: PatternData) -> Self {
-        let mut pattern_neighborhoods = Vec::new();
+        let mut pattern_adjacencies = Vec::new();
 
         for i in 0..pattern_data.patterns.len() {
-            pattern_neighborhoods.push(PatternAdjacency::new(&pattern_data, i));
+            pattern_adjacencies.push(PatternAdjacency::new(&pattern_data, i));
         }
 
         info!(
             "number of adjacencies per pattern: {} (should equal patterns * (2*pattern_w-1) * (2*pattern_h-1))",
-            pattern_neighborhoods[0].neighbors_allowed.len()
-                * pattern_neighborhoods[0].neighbors_allowed[0].len()
+            pattern_adjacencies[0].neighbors_allowed.len()
+                * pattern_adjacencies[0].neighbors_allowed[0].len()
         );
 
         Self {
             pattern_data,
-            pattern_neighborhoods,
+            pattern_adjacencies,
         }
     }
 }
@@ -54,6 +62,9 @@ impl PatternAdjacency {
         let top = 1 - *pattern_height as i32;
         let bottom = *pattern_height as i32;
 
+        let mut debug_total = 0;
+        let mut debug_true = 0;
+
         for pattern_index in 0..patterns.len() {
             neighbors_allowed.push(vec![false; total_offsets as usize]);
             for y in top..bottom {
@@ -63,9 +74,14 @@ impl PatternAdjacency {
                     let offset_index = (*pattern_width as i32 * offset_y + offset_x) as usize;
                     neighbors_allowed[pattern_index][offset_index] =
                         Self::is_overlapping_match(&pattern_data, self_index, pattern_index, x, y);
+
+                    debug_total += 1;
+                    debug_true += if neighbors_allowed[pattern_index][offset_index] { 1 } else { 0 };
                 }
             }
         }
+
+        print!("{}/{}{}", debug_true, debug_total, CURSOR_MOVE_LEFT);
 
         Self {
             pattern,
@@ -81,6 +97,35 @@ impl PatternAdjacency {
         that_pattern_x: i32,
         that_pattern_y: i32,
     ) -> bool {
+        let x = that_pattern_x;
+        let y = that_pattern_y;
+        let w = pattern_data.pattern_width as i32;
+        let h = pattern_data.pattern_height as i32;
+        let this_pattern = &pattern_data.patterns[this_pattern_index];
+        let that_pattern = &pattern_data.patterns[that_pattern_index];
+
+        let overlap_width = if x <= 0 { w + x } else { w - x };
+        let overlap_height = if y <= 0 { h + y } else { h - y };
+        let this_left = if x <= 0 { 0 } else { x };
+        let this_top = if y <= 0 { 0 } else { y };
+        let that_left = if x <= 0 { -x } else { 0 };
+        let that_top = if y <= 0 { -y } else { 0 };
+
+        for v in 0..overlap_height {
+            for u in 0..overlap_width {
+                let this_u = this_left + u;
+                let this_v = this_top + v;
+                let that_u = that_left + u;
+                let that_v = that_top + v;
+                let this_index = (w * this_v + this_u) as usize;
+                let that_index = (w * that_v + that_u) as usize;
+
+                if this_pattern[this_index] != that_pattern[that_index] {
+                    return false;
+                }
+            }
+        }
+
         true
     }
 }
