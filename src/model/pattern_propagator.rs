@@ -2,13 +2,7 @@ use log::info;
 
 use super::pattern_data::PatternData;
 
-//pub const CURSOR_SAVE: &'static str = "\x1b 7";
-//pub const CURSOR_RESET: &'static str = "\x1b 8";
-pub const CURSOR_SAVE: &'static str = "\x1b[s";
-pub const CURSOR_RESET: &'static str = "\x1b[u";
-
-pub const CURSOR_MOVE_LEFT: &'static str = "\x1b[9D";
-
+pub const CURSOR_UP_LEFT: &'static str = "\x1b[1F";
 
 pub struct PatternAdjacency {
     pub pattern: Vec<u32>,
@@ -26,10 +20,17 @@ impl PatternPropagator {
     pub fn new(pattern_data: PatternData) -> Self {
         let mut pattern_adjacencies = Vec::new();
 
+        info!("generating pattern propagator...");
+        println!();
         for i in 0..pattern_data.patterns.len() {
             pattern_adjacencies.push(PatternAdjacency::new(&pattern_data, i));
-        }
 
+            println!(
+                "{}{}%",
+                CURSOR_UP_LEFT,
+                100 * (i + 1) / pattern_data.patterns.len()
+            );
+        }
         info!(
             "number of adjacencies per pattern: {} (should equal patterns * (2*pattern_w-1) * (2*pattern_h-1))",
             pattern_adjacencies[0].neighbors_allowed.len()
@@ -62,9 +63,6 @@ impl PatternAdjacency {
         let top = 1 - *pattern_height as i32;
         let bottom = *pattern_height as i32;
 
-        let mut debug_total = 0;
-        let mut debug_true = 0;
-
         for pattern_index in 0..patterns.len() {
             neighbors_allowed.push(vec![false; total_offsets as usize]);
             for y in top..bottom {
@@ -72,16 +70,12 @@ impl PatternAdjacency {
                     let offset_x = x + *pattern_width as i32 - 1;
                     let offset_y = y + *pattern_height as i32 - 1;
                     let offset_index = (*pattern_width as i32 * offset_y + offset_x) as usize;
+
                     neighbors_allowed[pattern_index][offset_index] =
                         Self::is_overlapping_match(&pattern_data, self_index, pattern_index, x, y);
-
-                    debug_total += 1;
-                    debug_true += if neighbors_allowed[pattern_index][offset_index] { 1 } else { 0 };
                 }
             }
         }
-
-        print!("{}/{}{}", debug_true, debug_total, CURSOR_MOVE_LEFT);
 
         Self {
             pattern,
