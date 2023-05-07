@@ -8,7 +8,9 @@ pub type RawImage = (u32, u32, Vec<u8>);
 
 pub fn run<T: AsRef<Path>>(path: T, pattern_width: u32, pattern_height: u32) -> RawImage {
     let pattern_data = extract_patterns(path, pattern_width, pattern_height);
-    build_propagator(pattern_data);
+    let wave = initialize_wave(&pattern_data); // this is not mentioned in the original implementation
+    let pattern_propagator = build_propagator(pattern_data);
+
 
     for i in 0..10 {
         observe();
@@ -62,9 +64,12 @@ fn extract_patterns<T: AsRef<Path>>(
     }
 }
 
-fn build_propagator(pattern_data: PatternData) -> () {
-    PatternPropagator::new(pattern_data);
-    ()
+fn initialize_wave(pattern_data: &PatternData) -> () {
+
+}
+
+fn build_propagator(pattern_data: PatternData) -> PatternPropagator {
+    PatternPropagator::new(pattern_data)
 }
 
 fn observe() {}

@@ -20,17 +20,29 @@ impl PatternPropagator {
     pub fn new(pattern_data: PatternData) -> Self {
         let mut pattern_adjacencies = Vec::new();
 
-        info!("generating pattern propagator...");
+        info!("building pattern propagator:");
+        info!("  calculating pattern adjacencies...");
         println!();
         for i in 0..pattern_data.patterns.len() {
             pattern_adjacencies.push(PatternAdjacency::new(&pattern_data, i));
 
             println!(
-                "{}{}%",
+                "  {}{}%",
                 CURSOR_UP_LEFT,
                 100 * (i + 1) / pattern_data.patterns.len()
             );
         }
+
+        info!("  calculating pattern weights...");
+        for i in 0..pattern_data.patterns.len() {
+            for j in 0..pattern_data.patterns.len() {
+                if Self::patterns_overlap_(&pattern_data, &pattern_adjacencies, i, j, 0, 0) {
+                    pattern_adjacencies[i].weight += 1;
+                }
+            }
+            info!("{}", pattern_adjacencies[i].weight);
+        }
+
         info!(
             "number of adjacencies per pattern: {} (should equal patterns * (2*pattern_w-1) * (2*pattern_h-1))",
             pattern_adjacencies[0].neighbors_allowed.len()
@@ -41,6 +53,44 @@ impl PatternPropagator {
             pattern_data,
             pattern_adjacencies,
         }
+    }
+
+    fn patterns_overlap_(
+        pattern_data: &PatternData,
+        pattern_adjacencies: &Vec<PatternAdjacency>,
+        this_pattern_index: usize,
+        that_pattern_index: usize,
+        that_pattern_x: i32,
+        that_pattern_y: i32,
+    ) -> bool {
+        let PatternData {
+            pattern_width,
+            pattern_height,
+            ..
+        } = *pattern_data;
+
+        let offset_x = that_pattern_x + pattern_width as i32 - 1;
+        let offset_y = that_pattern_y + pattern_height as i32 - 1;
+        let offset_index = (pattern_width as i32 * offset_y + offset_x) as usize;
+
+        pattern_adjacencies[this_pattern_index].neighbors_allowed[that_pattern_index][offset_index]
+    }
+
+    pub fn patterns_overlap(
+        &self,
+        this_pattern_index: usize,
+        that_pattern_index: usize,
+        that_pattern_x: i32,
+        that_pattern_y: i32,
+    ) -> bool {
+        Self::patterns_overlap_(
+            &self.pattern_data,
+            &self.pattern_adjacencies,
+            this_pattern_index,
+            that_pattern_index,
+            that_pattern_x,
+            that_pattern_y,
+        )
     }
 }
 
