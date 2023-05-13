@@ -4,6 +4,7 @@ use super::pattern_data::PatternData;
 
 pub const CURSOR_UP_LEFT: &'static str = "\x1b[1F";
 
+
 pub struct PatternAdjacency {
     pub pattern: Vec<u32>,
     pub weight: u32,
@@ -18,11 +19,30 @@ pub struct PatternPropagator {
 
 impl PatternPropagator {
     pub fn new(pattern_data: PatternData) -> Self {
-        let mut pattern_adjacencies = Vec::new();
-
         info!("building pattern propagator:");
         info!("  calculating pattern adjacencies...");
         println!();
+        let pattern_propagator = Self::calculate_pattern_adjacencies(pattern_data);
+
+        info!("  calculating pattern weights...");
+        let pattern_propagator = Self::calculate_pattern_weights(pattern_propagator);
+
+
+        info!("  compressing propagator...");
+        let pattern_propagator = Self::compress_pattern_propagator(pattern_propagator);
+
+        //info!(
+        //    "number of adjacencies per pattern: {} (should equal patterns * (2*pattern_w-1) * (2*pattern_h-1))",
+        //    pattern_adjacencies[0].neighbors_allowed.len()
+        //        * pattern_adjacencies[0].neighbors_allowed[0].len()
+        //);
+
+        pattern_propagator
+    }
+
+    fn calculate_pattern_adjacencies(pattern_data: PatternData) -> Self {
+        let mut pattern_adjacencies = Vec::new();
+
         for i in 0..pattern_data.patterns.len() {
             pattern_adjacencies.push(PatternAdjacency::new(&pattern_data, i));
 
@@ -33,9 +53,21 @@ impl PatternPropagator {
             );
         }
 
-        info!("  calculating pattern weights...");
+        Self {
+            pattern_data,
+            pattern_adjacencies,
+        }
+    }
+
+    fn calculate_pattern_weights(pattern_propagator: Self) -> Self {
+        let Self { pattern_data, mut pattern_adjacencies } = pattern_propagator;
+
         for i in 0..pattern_data.patterns.len() {
             for j in 0..pattern_data.patterns.len() {
+                if i == j {
+                    continue;
+                }
+
                 if Self::patterns_overlap_(&pattern_data, &pattern_adjacencies, i, j, 0, 0) {
                     pattern_adjacencies[i].weight += 1;
                 }
@@ -43,15 +75,16 @@ impl PatternPropagator {
             info!("{}", pattern_adjacencies[i].weight);
         }
 
-        info!(
-            "number of adjacencies per pattern: {} (should equal patterns * (2*pattern_w-1) * (2*pattern_h-1))",
-            pattern_adjacencies[0].neighbors_allowed.len()
-                * pattern_adjacencies[0].neighbors_allowed[0].len()
-        );
-
         Self {
             pattern_data,
             pattern_adjacencies,
+        }
+    }
+
+    fn compress_pattern_propagator(pattern_propagator: Self) -> Self {
+        Self {
+            pattern_data: pattern_propagator.pattern_data,
+            pattern_adjacencies: pattern_propagator.pattern_adjacencies,
         }
     }
 
