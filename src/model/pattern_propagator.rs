@@ -4,7 +4,6 @@ use super::pattern_data::PatternData;
 
 pub const CURSOR_UP_LEFT: &'static str = "\x1b[1F";
 
-
 pub struct PatternAdjacency {
     pub pattern: Vec<u32>,
     pub weight: u32,
@@ -13,8 +12,8 @@ pub struct PatternAdjacency {
 }
 
 pub struct PatternPropagator {
-    pattern_data: PatternData,
     pattern_adjacencies: Vec<PatternAdjacency>,
+    pattern_data: PatternData,
 }
 
 impl PatternPropagator {
@@ -27,15 +26,8 @@ impl PatternPropagator {
         info!("  calculating pattern weights...");
         let pattern_propagator = Self::calculate_pattern_weights(pattern_propagator);
 
-
         info!("  compressing propagator...");
         let pattern_propagator = Self::compress_pattern_propagator(pattern_propagator);
-
-        //info!(
-        //    "number of adjacencies per pattern: {} (should equal patterns * (2*pattern_w-1) * (2*pattern_h-1))",
-        //    pattern_adjacencies[0].neighbors_allowed.len()
-        //        * pattern_adjacencies[0].neighbors_allowed[0].len()
-        //);
 
         pattern_propagator
     }
@@ -47,20 +39,24 @@ impl PatternPropagator {
             pattern_adjacencies.push(PatternAdjacency::new(&pattern_data, i));
 
             println!(
-                "  {}{}%",
+                "{}{}%",
                 CURSOR_UP_LEFT,
                 100 * (i + 1) / pattern_data.patterns.len()
             );
         }
+        println!("{}{}", CURSOR_UP_LEFT, CURSOR_UP_LEFT);
 
         Self {
-            pattern_data,
             pattern_adjacencies,
+            pattern_data,
         }
     }
 
     fn calculate_pattern_weights(pattern_propagator: Self) -> Self {
-        let Self { pattern_data, mut pattern_adjacencies } = pattern_propagator;
+        let Self {
+            pattern_data,
+            mut pattern_adjacencies,
+        } = pattern_propagator;
 
         for i in 0..pattern_data.patterns.len() {
             for j in 0..pattern_data.patterns.len() {
@@ -72,19 +68,77 @@ impl PatternPropagator {
                     pattern_adjacencies[i].weight += 1;
                 }
             }
-            info!("{}", pattern_adjacencies[i].weight);
         }
 
         Self {
-            pattern_data,
             pattern_adjacencies,
+            pattern_data,
         }
     }
 
+    // TODO: split into smaller functions
     fn compress_pattern_propagator(pattern_propagator: Self) -> Self {
+        let total_uncompressed_patterns = pattern_propagator.pattern_data.patterns.len();
+        let mut skip_index = vec![false; total_uncompressed_patterns];
+        let mut index_map = Self::build_index_map(total_uncompressed_patterns);
+
+        let mut pattern_adjacencies = Vec::new();
+        let pattern_data = PatternData {
+            image_height: pattern_propagator.pattern_data.image_height,
+            image_width: pattern_propagator.pattern_data.image_width,
+            pattern_height: pattern_propagator.pattern_data.pattern_height,
+            pattern_width: pattern_propagator.pattern_data.pattern_width,
+            patterns: Vec::new(),
+        };
+
+        // calculate weights and index_map
+        for i in 0..total_uncompressed_patterns {
+            if skip_index[i] {
+                continue;
+            }
+
+            pattern_adjacencies.push(PatternAdjacency {
+                neighbors_allowed: Vec::new(),
+                pattern: Vec::new(),
+                weight: 0,
+            });
+
+            let k = pattern_adjacencies.len() - 1;
+            index_map[i] = k;
+
+            for j in i + 1..total_uncompressed_patterns {
+                if skip_index[j] {
+                    continue;
+                }
+
+                if pattern_propagator.patterns_overlap(i, j, 0, 0) {
+                    skip_index[j] = true;
+                    index_map[j] = k;
+                    pattern_adjacencies[k].weight += 1;
+                }
+            }
+        }
+
+        let inverted_index_map = Self::invert_index_map(index_map);
+
+        // TODO: verify/test if this is correct
+        // copy pattern and neighbors_allowed according to index_map
+        for i in 0..pattern_adjacencies.len() {
+            let k = inverted_index_map[i];
+            pattern_adjacencies[i].pattern =
+                pattern_propagator.pattern_adjacencies[k].pattern.clone();
+
+            for j in 0..pattern_adjacencies.len() {
+                let l = inverted_index_map[j];
+                pattern_adjacencies[i]
+                    .neighbors_allowed
+                    .push(pattern_propagator.pattern_adjacencies[k].neighbors_allowed[l].clone());
+            }
+        }
+
         Self {
-            pattern_data: pattern_propagator.pattern_data,
-            pattern_adjacencies: pattern_propagator.pattern_adjacencies,
+            pattern_adjacencies,
+            pattern_data,
         }
     }
 
@@ -124,6 +178,29 @@ impl PatternPropagator {
             that_pattern_x,
             that_pattern_y,
         )
+    }
+
+    fn build_index_map(size: usize) -> Vec<usize> {
+        let mut index_map = vec![0 as usize; size];
+
+        for i in 0..size {
+            index_map[i] = i;
+        }
+
+        index_map
+    }
+
+    fn invert_index_map(index_map: Vec<usize>) -> Vec<usize> {
+        let mut inverted_index_map = Vec::new();
+
+        for i in 0..index_map.len() {
+            let l = inverted_index_map.len();
+            if index_map[i] == l {
+                inverted_index_map.push(i);
+            }
+        }
+
+        inverted_index_map
     }
 }
 
