@@ -2,15 +2,25 @@ use std::path::Path;
 
 use log::info;
 
-use crate::model::{pattern_data::PatternData, pattern_propagator::PatternPropagator};
+use crate::model::args::Args;
+use crate::model::pattern_data::PatternData;
+use crate::model::pattern_propagator::PatternPropagator;
+use crate::model::wave::Wave;
 
 pub type RawImage = (u32, u32, Vec<u8>);
 
-pub fn run<T: AsRef<Path>>(path: T, pattern_width: u32, pattern_height: u32) -> RawImage {
-    let pattern_data = extract_patterns(path, pattern_width, pattern_height);
-    let wave = initialize_wave(&pattern_data); // this is not mentioned in the original implementation
-    let pattern_propagator = build_propagator(pattern_data);
+pub fn run<T: AsRef<Path>>(args: Args<T>) -> RawImage {
+    let Args {
+        path,
+        pattern_width,
+        pattern_height,
+        target_image_width,
+        target_image_height,
+    } = args;
 
+    let pattern_data = extract_patterns(path, pattern_width, pattern_height);
+    let pattern_propagator = build_propagator(pattern_data);
+    let wave = initialize_wave(&pattern_propagator, target_image_width, target_image_height); // this is not mentioned in the original implementation
 
     for i in 0..10 {
         observe();
@@ -53,7 +63,10 @@ fn extract_patterns<T: AsRef<Path>>(
     info!("pattern height: {}", pattern_height);
     info!("image width: {}", image_width);
     info!("image height: {}", image_height);
-    info!("number of patterns: {} (should equal image_w * image_h)", patterns.len());
+    info!(
+        "number of patterns: {} (should equal image_w * image_h)",
+        patterns.len()
+    );
 
     PatternData {
         patterns,
@@ -64,8 +77,27 @@ fn extract_patterns<T: AsRef<Path>>(
     }
 }
 
-fn initialize_wave(pattern_data: &PatternData) -> () {
+fn initialize_wave(
+    pattern_propagator: &PatternPropagator,
+    target_image_width: u32,
+    target_image_height: u32,
+) -> Wave {
+    info!("initializing wave...");
 
+    let mut wave = Wave {
+        width: target_image_width,
+        height: target_image_height,
+        indices: Vec::new(),
+    };
+
+    for i in 0..(wave.width*wave.height) as usize {
+        wave.indices.push(Vec::new());
+        for j in 0..pattern_propagator.pattern_adjacencies.len() {
+            wave.indices[i].push(j);
+        }
+    }
+
+    wave
 }
 
 fn build_propagator(pattern_data: PatternData) -> PatternPropagator {

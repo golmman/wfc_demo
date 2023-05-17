@@ -7,6 +7,7 @@ use term2d::model::image::Image;
 use term2d::model::key::Key;
 use term2d::view::canvas::halfblock::HalfblockCanvas;
 
+use crate::model::args::Args;
 use crate::model::state::State;
 use crate::view::renderer::Renderer;
 
@@ -19,7 +20,15 @@ pub struct Controller {
 
 impl Controller {
     pub fn new() -> Self {
-        let img_raw = wfc::run("data/flowers.png", 3, 3);
+        let args = Args {
+            path: "data/flowers.png",
+            pattern_width: 3,
+            pattern_height: 3,
+            target_image_width: 100,
+            target_image_height: 100,
+        };
+
+        let img_raw = wfc::run(args);
         let img = Image::from(img_raw);
 
         let renderer = Renderer::new();

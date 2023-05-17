@@ -1,4 +1,5 @@
 use controller::Controller;
+use model::args::Args;
 
 pub mod controller;
 pub mod model;
@@ -7,7 +8,15 @@ pub mod view;
 fn main() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("debug")).init();
 
-    controller::wfc::run("data/flowers.png", 3, 3);
+    let args = Args {
+        path: "data/flowers.png",
+        pattern_width: 3,
+        pattern_height: 3,
+        target_image_width: 100,
+        target_image_height: 100,
+    };
+
+    controller::wfc::run(args);
 
     //let controller = Controller::new();
     //term2d::run(controller);
