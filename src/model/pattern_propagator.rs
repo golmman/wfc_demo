@@ -12,10 +12,11 @@ pub struct PatternAdjacency {
 }
 
 pub struct PatternPropagator {
-    pattern_adjacencies: Vec<PatternAdjacency>,
-    pattern_data: PatternData,
+    pub pattern_adjacencies: Vec<PatternAdjacency>,
+    pub pattern_data: PatternData,
 }
 
+// TODO: too much calculation for a 'model' struct
 impl PatternPropagator {
     pub fn new(pattern_data: PatternData) -> Self {
         info!("building pattern propagator:");
@@ -28,6 +29,11 @@ impl PatternPropagator {
 
         info!("  compressing propagator...");
         let pattern_propagator = Self::compress_pattern_propagator(pattern_propagator);
+
+        info!(
+            "number of patterns after compression: {}",
+            pattern_propagator.pattern_adjacencies.len()
+        );
 
         pattern_propagator
     }
@@ -83,7 +89,7 @@ impl PatternPropagator {
         let mut index_map = Self::build_index_map(total_uncompressed_patterns);
 
         let mut pattern_adjacencies = Vec::new();
-        let pattern_data = PatternData {
+        let mut pattern_data = PatternData {
             image_height: pattern_propagator.pattern_data.image_height,
             image_width: pattern_propagator.pattern_data.image_width,
             pattern_height: pattern_propagator.pattern_data.pattern_height,
@@ -134,6 +140,14 @@ impl PatternPropagator {
                     .neighbors_allowed
                     .push(pattern_propagator.pattern_adjacencies[k].neighbors_allowed[l].clone());
             }
+        }
+
+        // copy pattern_data according to index_map
+        for i in 0..pattern_adjacencies.len() {
+            let k = inverted_index_map[i];
+            pattern_data
+                .patterns
+                .push(pattern_propagator.pattern_data.patterns[k].clone());
         }
 
         Self {
