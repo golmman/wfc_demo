@@ -37,9 +37,9 @@ fn extract_patterns<T: AsRef<Path>>(
 ) -> PatternData {
     let mut patterns = Vec::new();
 
-    //let (image_width, image_height, image) = helper::load_image_raw("data/flowers.png");
-    //let (image_width, image_height, image) = helper::load_image_as_8bit("data/flowers.png");
-    let (image_width, image_height, image_data) = helper::load_image("data/flowers.png");
+    //let (image_width, image_height, image) = helper::load_image_raw(path);
+    //let (image_width, image_height, image) = helper::load_image_as_8bit(path);
+    let (image_width, image_height, image_data) = helper::load_image(path);
 
     for image_y in 0..image_width {
         for image_x in 0..image_height {
@@ -70,6 +70,7 @@ fn extract_patterns<T: AsRef<Path>>(
 
     PatternData {
         patterns,
+        // TODO: is this additional data even needed?
         image_height,
         image_width,
         pattern_height,
