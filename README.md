@@ -1,4 +1,4 @@
-# wcf_demo
+# wfc_demo
 
 ## Description of the Algorithm
 
