@@ -106,6 +106,17 @@ fn build_propagator(pattern_data: PatternData) -> PatternPropagator {
 
 fn observe() {}
 
+fn find_lowest_entropy(wave: &Wave) -> Option<usize> {
+    // TODO: speed up with the knowledge of last iteration
+    let lowest_entropy_index = None;
+
+    for i in 0..wave.indices.len() {
+
+    }
+
+    lowest_entropy_index
+}
+
 fn propagate() {}
 
 fn combine_observations() -> RawImage {
