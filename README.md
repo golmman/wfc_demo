@@ -97,7 +97,7 @@ Goal: prepare a lookup table for the propagate step
 
 #### Output
 
-- updated wave
+- updated `Wave`
 - index of changed wave entry
 
 #### Description
@@ -115,21 +115,47 @@ Goal: prepare a lookup table for the propagate step
 
 #### Input
 
+- `PatternPropagator`
+- `Wave`
+- index of changed wave entry
+
 #### Output
+
+- updated `Wave`
 
 #### Description
 
-- if an entry consists of an empty list a contradiction was found:
-  - backtrack, or
-  - restart algorithm from the `initialize_wave` step (recommended by Gumin)
+- let a be the index of the changed wave entry
+- initialize an empty stack of index pairs
+- put (a, a) onto the stack
+- while the stack is not empty:
+  - pop (i, j) from the stack
+  - if the wave entry j consists of an empty list a contradiction was found:
+    - backtrack, or
+    - restart algorithm from the `initialize_wave` step (recommended by Gumin)
+  - for each pattern pixel u of wave entry i
+    - for each pattern pixel v of wave entry j
+      - if the pattern propagator relationship between u and v is false
+        - remove v from wave entry j
+  - if any remove took place
+    - for all 8 neighbors k of index j
+      - put (j, k) onto the stack
+
+Note that it is not obvious why this algorithm is correct in the sense that it catches all ways to update the wave while only checking in the 8-neighborhood instead of all possibly affected pixels. Also it seems that there are possibly lots of unecessary/duplicated checks making this not very efficient.
 
 ### Combine Observations
 
 #### Input
 
+- collapsed `Wave` (all entries are lists of one element)
+
 #### Output
 
+- image
+
 #### Description
+
+- map one-element-lists to there respective pixels and interprete this a an image
 
 ## Links and other resources
 
