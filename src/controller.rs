@@ -11,6 +11,8 @@ use crate::model::args::Args;
 use crate::model::state::State;
 use crate::view::renderer::Renderer;
 
+pub mod build_propagator;
+pub mod extract_patterns;
 pub mod wfc;
 
 pub struct Controller {
