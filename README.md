@@ -19,16 +19,15 @@
 #### Description
 
 ```
-extract_patterns()
-build_propagator()
-initialize_wave()
+pattern_data = extract_patterns(path, pattern_width, pattern_height)
+pattern_propagator = build_propagator(pattern_data)
+wave = initialize_wave(pattern_propagator, target_image_width, target_image_height)
 
-loop {
-  observe()
-  propagate()
-}
+loop:
+  (wave, updated_index) = observe(wave)
+  wave = propagate(wave, updated_index, pattern_propagator)
 
-combine observations()
+combine_observations(wave)
 ```
 
 ### Extract Patterns
