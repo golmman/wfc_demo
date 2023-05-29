@@ -252,7 +252,7 @@ impl PatternAdjacency {
         }
 
         Self {
-            pattern,
+            pattern: pattern.pixels,
             weight,
             neighbors_allowed,
         }
@@ -288,7 +288,7 @@ impl PatternAdjacency {
                 let this_index = (w * this_v + this_u) as usize;
                 let that_index = (w * that_v + that_u) as usize;
 
-                if this_pattern[this_index] != that_pattern[that_index] {
+                if this_pattern.pixels[this_index] != that_pattern.pixels[that_index] {
                     return false;
                 }
             }

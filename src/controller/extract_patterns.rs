@@ -1,6 +1,9 @@
+use std::collections::HashSet;
 use std::path::Path;
 
-use crate::model::{pattern_data::PatternData, raw_image::RawImage};
+use crate::model::pattern_data::Pattern;
+use crate::model::pattern_data::PatternData;
+use crate::model::raw_image::RawImage;
 
 use image::GenericImageView;
 use log::info;
@@ -10,14 +13,12 @@ pub fn extract_patterns<T: AsRef<Path>>(
     pattern_width: u32,
     pattern_height: u32,
 ) -> PatternData {
-    let mut patterns = Vec::new();
-
+    let mut pattern_set: HashSet<Pattern> = HashSet::new();
     let (image_width, image_height, image_data) = load_image(path);
 
     for image_y in 0..image_width {
         for image_x in 0..image_height {
-            patterns.push(vec![0; (pattern_width * pattern_height) as usize]);
-            let patterns_last = patterns.len() - 1;
+            let mut pixels = vec![0; (pattern_width * pattern_height) as usize];
 
             for pattern_y in 0..pattern_width {
                 for pattern_x in 0..pattern_width {
@@ -25,20 +26,34 @@ pub fn extract_patterns<T: AsRef<Path>>(
                     let scan_y = (image_y + pattern_y) % image_height;
                     let image_index = (image_width * scan_y + scan_x) as usize;
                     let pattern_index = (pattern_width * pattern_y + pattern_x) as usize;
-
-                    patterns[patterns_last][pattern_index] = image_data[image_index];
+                    pixels[pattern_index] = image_data[image_index];
                 }
             }
+
+            let mut pattern = Pattern { pixels, weight: 1 };
+            if let Some(p) = pattern_set.get(&pattern) {
+                pattern.weight = p.weight + 1;
+            }
+
+            pattern_set.replace(pattern);
         }
+    }
+
+    let patterns: Vec<Pattern> = pattern_set.into_iter().collect();
+
+    let mut weight_sum = 0;
+    for i in 0..patterns.len() {
+        weight_sum += patterns[i].weight;
     }
 
     info!("pattern width: {}", pattern_width);
     info!("pattern height: {}", pattern_height);
     info!("image width: {}", image_width);
     info!("image height: {}", image_height);
+    info!("number of unique patterns: {}", patterns.len());
     info!(
-        "number of patterns: {} (should equal image_w * image_h)",
-        patterns.len()
+        "sum of pattern weights: {} (should equal image_w * image_h)",
+        weight_sum
     );
 
     PatternData {
