@@ -57,18 +57,18 @@ combine_observations(wave)
 
 #### Output
 
-- `PatternPropagator`: table of unique, weighted pattern pixels and their relationships to other pattern pixels
-- here the weights are converted to probabilites (floats in the range of [0, 1])
-  - proper probabilities will be important in the observe step
+- `PatternPropagator`: table of (unique?) weighted pattern pixels and their relationships to other pattern pixels
+- a total weight is calculated based on the total number of pixels and the weights collected during the pattern extraction
 
 #### Description
 
 Goal: prepare a lookup table for the propagate step
 
+- calculate total weight
+- initialze pattern pixels with empty relationships
 - calculate relationships
-- add up weights of duplicated pattern pixels
 - remove duplicated pattern pixels
-- convert weights to probabilities
+  - TODO: unclear if necessary or how to do this
 
 ### Initialize Wave
 

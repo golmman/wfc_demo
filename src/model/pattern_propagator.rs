@@ -4,6 +4,32 @@ use super::pattern_data::PatternData;
 
 pub const CURSOR_UP_LEFT: &'static str = "\x1b[1F";
 
+pub struct PatternPixel {
+    pub color: u32,
+    pub colors: Vec<u32>,
+    pub relationships: Vec<bool>,
+    pub weight: u32,
+    pub x: u32,
+    pub y: u32,
+}
+
+pub struct PatternPropagator2 {
+    pub pattern_data: PatternData,
+    pub pattern_pixels: Vec<PatternPixel>,
+    pub total_weight: u32,
+}
+
+impl PatternPropagator2 {
+    pub fn get_pixel_index(&self, pattern_index: usize, x: u32, y: u32) -> usize {
+        let w = self.pattern_data.pattern_width as usize;
+        let p = w * self.pattern_data.pattern_height as usize;
+        let x = x as usize;
+        let y = y as usize;
+
+        pattern_index * p + y * w + x
+    }
+}
+
 pub struct PatternAdjacency {
     pub pattern: Vec<u32>,
     pub weight: u32,
