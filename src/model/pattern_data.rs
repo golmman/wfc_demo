@@ -11,6 +11,7 @@ pub struct PatternData {
 
 #[derive(Clone, Debug)]
 pub struct Pattern {
+    // TODO: rename to colors to match wording in PatternPixel
     pub pixels: Vec<u32>,
     pub weight: u32,
 }

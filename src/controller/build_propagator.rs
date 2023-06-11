@@ -52,6 +52,44 @@ fn calculate_relationships(pattern_propagator: PatternPropagator2) -> PatternPro
     pattern_propagator
 }
 
+fn is_overlapping_match(
+    this_pixel: &PatternPixel,
+    that_pixel: &PatternPixel,
+    that_pattern_x: i32,
+    that_pattern_y: i32,
+    pattern_width: u32,
+    pattern_height: u32,
+) -> bool {
+    let x = that_pattern_x;
+    let y = that_pattern_y;
+    let w = pattern_width as i32;
+    let h = pattern_height as i32;
+
+    let overlap_width = if x <= 0 { w + x } else { w - x };
+    let overlap_height = if y <= 0 { h + y } else { h - y };
+    let this_left = if x <= 0 { 0 } else { x };
+    let this_top = if y <= 0 { 0 } else { y };
+    let that_left = if x <= 0 { -x } else { 0 };
+    let that_top = if y <= 0 { -y } else { 0 };
+
+    for v in 0..overlap_height {
+        for u in 0..overlap_width {
+            let this_u = this_left + u;
+            let this_v = this_top + v;
+            let that_u = that_left + u;
+            let that_v = that_top + v;
+            let this_index = (w * this_v + this_u) as usize;
+            let that_index = (w * that_v + that_u) as usize;
+
+            if this_pixel.colors[this_index] != that_pixel.colors[that_index] {
+                return false;
+            }
+        }
+    }
+
+    true
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

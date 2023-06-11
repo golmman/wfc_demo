@@ -142,7 +142,7 @@ Pixels adjacent
   - in the 1st example: the top left pattern contains pixel B at x=3, y=1
   - in the 2nd example: the top left pattern contains pixel B at x=2, y=1
   - in both examples: the bottom right pattern contains pixel A at x=3, y=1
-  - pixels are _adjacent_ iff both are contained in the overlapping area
+  - pixels are _adjacent_ iff both are contained in the overlapping area / intersection
 - check for the relationship of the pattern pixels in the 2nd example
   - the wave stores a list of `pattern_pixels` indices at each position
   - at some position inside the wave we want to check if the pixel there (pixel A) is compatible / in relationship with another adjacent pixel (pixel B)
