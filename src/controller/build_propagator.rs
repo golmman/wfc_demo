@@ -19,8 +19,9 @@ fn initialize_pixels(pattern_data: PatternData) -> PatternPropagator2 {
         pattern_width,
         pattern_height,
     } = pattern_data;
-    let total_weight = pattern_width * pattern_height * image_width * image_height;
-    let total_pixels = patterns.len() * (pattern_width * pattern_height) as usize;
+    let pattern_size = pattern_width * pattern_height;
+    let total_weight = pattern_size * image_width * image_height;
+    let total_relationships = patterns.len() * (pattern_size * pattern_size) as usize;
 
     for i in 0..patterns.len() {
         for y in 0..pattern_height {
@@ -29,7 +30,7 @@ fn initialize_pixels(pattern_data: PatternData) -> PatternPropagator2 {
                 pattern_pixels.push(PatternPixel {
                     color: patterns[i].pixels[j],
                     colors: patterns[i].pixels.clone(),
-                    relationships: vec![false; total_pixels],
+                    relationships: vec![false; total_relationships],
                     weight: patterns[i].weight,
                     x,
                     y,
@@ -59,12 +60,16 @@ mod tests {
     #[test]
     fn it_initializes_pattern_pixels() {
         let pattern_data = extract_patterns("./data/flowers.png", 3, 3);
+        let pattern_size = (pattern_data.pattern_width * pattern_data.pattern_height) as usize;
         let pattern_propagator = initialize_pixels(pattern_data);
         let pattern_pixels = pattern_propagator.pattern_pixels;
 
         let mut total_weight = 0;
         for i in 0..pattern_pixels.len() {
-            assert_eq!(pattern_pixels[i].relationships.len(), pattern_pixels.len());
+            assert_eq!(
+                pattern_pixels[i].relationships.len(),
+                pattern_pixels.len() * pattern_size,
+            );
             total_weight += pattern_pixels[i].weight;
         }
 

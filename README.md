@@ -64,11 +64,99 @@ combine_observations(wave)
 
 Goal: prepare a lookup table for the propagate step
 
+The propagator holds an 8-dimensional array/tensor which is unfolded into the `pattern_pixels` vector which stores 3 dimensions, then each element has an `relationships` vector which stores the remaining 5 dimensions.
+
+##### `pattern_pixels`
+
+- p1 = 1st pattern index
+- x1 = 1st pattern pixel x coordinate
+- y1 = 1st pattern pixel y coordinate
+
+The 3-dimensions are only used during the initialization phase, later `pattern_pixels` are accessed as a 1-dimensional array where (p1, x1, y1) is collapsed to the pixel index.
+
+##### `relationships`
+
+- p2 = 2nd pattern index
+- x2 = 2nd pattern pixel x coordinate
+- y2 = 2nd pattern pixel y coordinate
+- u = 2nd pattern pixel x coordinate from the 1st patterns perspective
+- v = 2nd pattern pixel y coordinate from the 1st patterns perspective
+
+The 5-dimensions are only used during the initialization phase, later `relationships` are accessed as a 3-dimensional array where (p2, x2, y2) is collapsed to the pixel index.
+
+##### Summary
+
+- The pattern propagator stores 8-dimensional data
+- as a 2-dimensional array (3d-`pattern_pixels`, each storing 5d-`relationships`)
+- which are accessed like a 4-dimensional array (1d-`pattern_pixels`, 3d-`relationships`)
+- the 8-dimensionality is only relevant during initialization
+
+##### Algorithm
+
 - calculate total weight
 - initialze pattern pixels with empty relationships
 - calculate relationships
+  - the number of total relationships per pixel equals P _ (W _ H)^2, where
+    - P = total number of patterns (after deduplication)
+    - W = pattern width
+    - H = pattern height
+  - the relationships vector can be thought of as a 5-dimensional array with indices as follows
+    - 1st index: pattern index
+    - 2nd and 3rd index: x and y coordinate of the pixel inside this pattern
+    - 4th and 5th index: x and y coordinate of the compared pixel inside this pattern
+    - see below for a graphic example
 - remove duplicated pattern pixels
   - TODO: unclear if necessary or how to do this
+
+##### Example for the usage of the relationships vector
+
+```
+Pixels not adjacent:
+ -------------------
+|   |   |   |   |   |
+ ---------------------------
+|   |   | ~ | B | ~ |   |   |
+ ---------------------------
+|   |   | ~ | ~ | ~ | A |   |
+ ---------------------------
+        |   |   |   |   |   |
+         -------------------
+
+Pixels adjacent
+ -------------------
+|   |   |   |   |   |
+ -----------------------
+|   | ~ | B | ~ | ~ |   |
+ -----------------------
+|   | ~ | ~ | ~ | A |   |
+ -----------------------
+    |   |   |   |   |   |
+     -------------------
+```
+
+- general explanation
+  - pictured are to examples of overlapping patterns
+  - the patterns have width 5 and height 3
+  - the top left coordinate in a pattern is x=0, y=0
+  - `~` indicates the overlapping area of the patterns
+  - in the 1st example: the top left pattern contains pixel B at x=3, y=1
+  - in the 2nd example: the top left pattern contains pixel B at x=2, y=1
+  - in both examples: the bottom right pattern contains pixel A at x=3, y=1
+  - pixels are _adjacent_ iff both are contained in the overlapping area
+- check for the relationship of the pattern pixels in the 2nd example
+  - the wave stores a list of `pattern_pixels` indices at each position
+  - at some position inside the wave we want to check if the pixel there (pixel A) is compatible / in relationship with another adjacent pixel (pixel B)
+    - if the pixels were not adjacent the relationship vector should answer with a `false` value
+    - let u = pixel A's index (in the propagators `pattern_pixels` vector)
+    - let v = pixel B's index
+    - let s = pattern_width \* pattern_height
+    - let w = pattern width
+    - from pixel A's perspective B is located at x=1, y=0 inside its pattern
+    - then the relationship index is calculated as
+      - `let r = v * s + y * w + x`
+    - then check A's relationship vector for the answer
+      - `let a = pattern_propagator.pattern_pixels[u].relationships[r]`
+    - a is a boolean with the precalculated (during the build_propagator step) answer
 
 ### Initialize Wave
 
