@@ -52,9 +52,9 @@ fn calculate_relationships(pattern_propagator: PatternPropagator2) -> PatternPro
     pattern_propagator
 }
 
-fn is_overlapping_match(
-    this_pixel: &PatternPixel,
-    that_pixel: &PatternPixel,
+fn is_intersection_match(
+    this_colors: &Vec<u32>,
+    that_colors: &Vec<u32>,
     that_pattern_x: i32,
     that_pattern_y: i32,
     pattern_width: u32,
@@ -81,7 +81,7 @@ fn is_overlapping_match(
             let this_index = (w * this_v + this_u) as usize;
             let that_index = (w * that_v + that_u) as usize;
 
-            if this_pixel.colors[this_index] != that_pixel.colors[that_index] {
+            if this_colors[this_index] != that_colors[that_index] {
                 return false;
             }
         }
@@ -112,5 +112,31 @@ mod tests {
         }
 
         assert_eq!(pattern_propagator.total_weight, total_weight);
+    }
+
+    #[test]
+    fn it_checks_if_pattern_intersections_match() {
+        #[rustfmt::skip]
+        let c1 = vec![
+            1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1,
+            1, 1, 1, 2, 2,
+        ];
+        #[rustfmt::skip]
+        let c2 = vec![
+            2, 2, 1, 1, 1,
+            1, 1, 3, 1, 1,
+            1, 1, 1, 1, 1,
+        ];
+        let w = 5;
+        let h = 3;
+
+        assert!(!is_intersection_match(&c1, &c2, 0, 0, w, h));
+        assert!(!is_intersection_match(&c1, &c2, -2, 0, w, h));
+        assert!(is_intersection_match(&c1, &c2, 10, 50, w, h));
+        assert!(is_intersection_match(&c1, &c2, -20, 0, w, h));
+        assert!(is_intersection_match(&c1, &c2, -3, 0, w, h));
+        assert!(is_intersection_match(&c1, &c2, -3, -1, w, h));
+        assert!(is_intersection_match(&c1, &c2, 3, 2, w, h));
     }
 }
