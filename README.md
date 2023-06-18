@@ -79,8 +79,8 @@ The 3-dimensions are only used during the initialization phase, later `pattern_p
 - p2 = 2nd pattern index
 - x2 = 2nd pattern pixel x coordinate
 - y2 = 2nd pattern pixel y coordinate
-- u = 2nd pattern pixel x coordinate from the 1st patterns perspective
-- v = 2nd pattern pixel y coordinate from the 1st patterns perspective
+- u = 2nd pattern pixel x coordinate inside the 1st pattern
+- v = 2nd pattern pixel y coordinate inside the 1st pattern
 
 The 5-dimensions are only used during the initialization phase, later `relationships` are accessed as a 3-dimensional array where (p2, x2, y2) is collapsed to the pixel index.
 

@@ -1,3 +1,4 @@
+use crate::model::pattern_data::Pattern;
 use crate::model::pattern_data::PatternData;
 use crate::model::pattern_propagator::PatternPixel;
 use crate::model::pattern_propagator::PatternPropagator2;
@@ -5,7 +6,7 @@ use crate::model::pattern_propagator::PatternPropagator2;
 pub fn build_propagator(pattern_data: PatternData) -> PatternPropagator2 {
     let propagator = initialize_pixels(pattern_data);
 
-    let propagator = calculate_relationships(propagator);
+    let propagator = calculate_propagator_relationships(propagator);
 
     propagator
 }
@@ -48,8 +49,58 @@ fn initialize_pixels(pattern_data: PatternData) -> PatternPropagator2 {
     propagator
 }
 
-fn calculate_relationships(pattern_propagator: PatternPropagator2) -> PatternPropagator2 {
+fn calculate_propagator_relationships(
+    pattern_propagator: PatternPropagator2,
+) -> PatternPropagator2 {
+    let PatternData {
+        ref patterns,
+        pattern_width,
+        pattern_height,
+        ..
+    } = pattern_propagator.pattern_data;
+
+    for this_pattern_index in 0..patterns.len() {
+        let this_colors = &patterns[this_pattern_index].pixels;
+        for this_y in 0..pattern_height {
+            for this_x in 0..pattern_width {
+                calculate_pixel_relationships(&pattern_propagator.pattern_data, this_colors);
+            }
+        }
+    }
+
     pattern_propagator
+}
+
+fn calculate_pixel_relationships(pattern_data: &PatternData, this_colors: &Vec<u32>) -> Vec<bool> {
+    let PatternData {
+        ref patterns,
+        pattern_width,
+        pattern_height,
+        ..
+    } = *pattern_data;
+
+    let w = pattern_width;
+    let h = pattern_height;
+    let s = (pattern_width * pattern_height) as usize;
+    let total_relationships = patterns.len() * s * s;
+    let mut relationships = Vec::new();
+
+    for that_pattern_index in 0..patterns.len() {
+        let that_colors = &patterns[that_pattern_index].pixels;
+        for y in 0..h {
+            for x in 0..w {
+                //let intersection_match = is_intersection_match(this_colors, that_colors, x, y, w, h);
+                for v in 0..h {
+                    for u in 0..w {
+                        let index =
+                            pattern_data.get_relationship_index(that_pattern_index, x, y, u, v);
+                    }
+                }
+            }
+        }
+    }
+
+    relationships
 }
 
 fn is_intersection_match(

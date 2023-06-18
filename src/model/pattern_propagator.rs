@@ -19,17 +19,6 @@ pub struct PatternPropagator2 {
     pub total_weight: u32,
 }
 
-impl PatternPropagator2 {
-    pub fn get_pixel_index(&self, pattern_index: usize, x: u32, y: u32) -> usize {
-        let w = self.pattern_data.pattern_width as usize;
-        let p = w * self.pattern_data.pattern_height as usize;
-        let x = x as usize;
-        let y = y as usize;
-
-        pattern_index * p + y * w + x
-    }
-}
-
 pub struct PatternAdjacency {
     pub pattern: Vec<u32>,
     pub weight: u32,
