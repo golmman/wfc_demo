@@ -8,6 +8,7 @@ use crate::model::pattern_propagator::PatternPropagator;
 use crate::model::raw_image::RawImage;
 use crate::model::wave::Wave;
 
+use super::build_propagator::build_propagator;
 use super::extract_patterns::extract_patterns;
 
 pub fn run<T: AsRef<Path>>(args: Args<T>) -> RawImage {
@@ -21,7 +22,7 @@ pub fn run<T: AsRef<Path>>(args: Args<T>) -> RawImage {
 
     let pattern_data = extract_patterns(path, pattern_width, pattern_height);
     let pattern_propagator = build_propagator(pattern_data);
-    let wave = initialize_wave(&pattern_propagator, target_image_width, target_image_height); // this is not mentioned in the original implementation
+    //let wave = initialize_wave(&pattern_propagator, target_image_width, target_image_height); // this is not mentioned in the original implementation
 
     for i in 0..10 {
         observe();
@@ -54,9 +55,9 @@ fn initialize_wave(
     wave
 }
 
-fn build_propagator(pattern_data: PatternData) -> PatternPropagator {
-    PatternPropagator::new(pattern_data)
-}
+//fn build_propagator(pattern_data: PatternData) -> PatternPropagator {
+//    PatternPropagator::new(pattern_data)
+//}
 
 fn observe() {}
 

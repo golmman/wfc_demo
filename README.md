@@ -96,7 +96,7 @@ The 5-dimensions are only used during the initialization phase, later `relations
 - calculate total weight
 - initialze pattern pixels with empty relationships
 - calculate relationships
-  - the number of total relationships per pixel equals P _ (W _ H)^2, where
+  - the number of total relationships per pixel equals `P * (W * H)^2`, where
     - P = total number of patterns (after deduplication)
     - W = pattern width
     - H = pattern height

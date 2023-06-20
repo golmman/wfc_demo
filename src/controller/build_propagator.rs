@@ -22,7 +22,6 @@ fn initialize_pixels(pattern_data: PatternData) -> PatternPropagator2 {
     } = pattern_data;
     let pattern_size = pattern_width * pattern_height;
     let total_weight = pattern_size * image_width * image_height;
-    let total_relationships = patterns.len() * (pattern_size * pattern_size) as usize;
 
     for i in 0..patterns.len() {
         for y in 0..pattern_height {
@@ -31,7 +30,7 @@ fn initialize_pixels(pattern_data: PatternData) -> PatternPropagator2 {
                 pattern_pixels.push(PatternPixel {
                     color: patterns[i].pixels[j],
                     colors: patterns[i].pixels.clone(),
-                    relationships: vec![false; total_relationships],
+                    relationships: Vec::new(),
                     weight: patterns[i].weight,
                     x,
                     y,
@@ -50,20 +49,31 @@ fn initialize_pixels(pattern_data: PatternData) -> PatternPropagator2 {
 }
 
 fn calculate_propagator_relationships(
-    pattern_propagator: PatternPropagator2,
+    mut pattern_propagator: PatternPropagator2,
 ) -> PatternPropagator2 {
+    let pattern_data = &pattern_propagator.pattern_data;
     let PatternData {
         ref patterns,
         pattern_width,
         pattern_height,
         ..
-    } = pattern_propagator.pattern_data;
+    } = *pattern_data;
 
     for this_pattern_index in 0..patterns.len() {
+        println!("{}", this_pattern_index);
         let this_colors = &patterns[this_pattern_index].pixels;
-        for this_y in 0..pattern_height {
-            for this_x in 0..pattern_width {
-                calculate_pixel_relationships(&pattern_propagator.pattern_data, this_colors);
+        for y1 in 0..pattern_height {
+            for x1 in 0..pattern_width {
+                let relationships = calculate_pixel_relationships(
+                    pattern_data,
+                    this_colors,
+                    x1,
+                    y1,
+                );
+
+                let pi = pattern_data.get_pixel_index(this_pattern_index, x1, y1);
+
+                pattern_propagator.pattern_pixels[pi].relationships = relationships;
             }
         }
     }
@@ -71,7 +81,12 @@ fn calculate_propagator_relationships(
     pattern_propagator
 }
 
-fn calculate_pixel_relationships(pattern_data: &PatternData, this_colors: &Vec<u32>) -> Vec<bool> {
+fn calculate_pixel_relationships(
+    pattern_data: &PatternData,
+    this_colors: &Vec<u32>,
+    x1: u32,
+    y1: u32,
+) -> Vec<bool> {
     let PatternData {
         ref patterns,
         pattern_width,
@@ -83,17 +98,33 @@ fn calculate_pixel_relationships(pattern_data: &PatternData, this_colors: &Vec<u
     let h = pattern_height;
     let s = (pattern_width * pattern_height) as usize;
     let total_relationships = patterns.len() * s * s;
-    let mut relationships = Vec::new();
+    let mut relationships = vec![false; total_relationships];
 
     for that_pattern_index in 0..patterns.len() {
         let that_colors = &patterns[that_pattern_index].pixels;
-        for y in 0..h {
-            for x in 0..w {
-                //let intersection_match = is_intersection_match(this_colors, that_colors, x, y, w, h);
+        for y2 in 0..h {
+            for x2 in 0..w {
                 for v in 0..h {
                     for u in 0..w {
-                        let index =
-                            pattern_data.get_relationship_index(that_pattern_index, x, y, u, v);
+                        let tx = u as i32 - x2 as i32;
+                        let ty = v as i32 - y2 as i32;
+
+                        let ri =
+                            pattern_data.get_relationship_index(that_pattern_index, x2, y2, u, v);
+
+                        let inside_x_interval = is_inside_interval_intersection(x1, tx, w);
+                        let inside_y_interval = is_inside_interval_intersection(y1, ty, h);
+
+                        if !inside_x_interval || !inside_y_interval {
+                            relationships[ri] = false;
+                            continue;
+                        }
+
+                        // TODO: speed up with caching or clever index traversion
+                        let intersection_match =
+                            is_intersection_match(this_colors, that_colors, tx, ty, w, h);
+
+                        relationships[ri] = intersection_match;
                     }
                 }
             }
@@ -101,6 +132,23 @@ fn calculate_pixel_relationships(pattern_data: &PatternData, this_colors: &Vec<u
     }
 
     relationships
+}
+
+// TODO: proper rust doc
+// Example:
+// this interval:      | |x| | | |
+// other interval: | | | | | |
+// x = 1
+// other_interval_start = -2
+// width = 5
+// Result: true, as x lies inside the 3 unit wide intersection of both intervals
+fn is_inside_interval_intersection(x: u32, other_interval_start: i32, width: u32) -> bool {
+    if other_interval_start < 0 {
+        return (x as i32) < other_interval_start + width as i32;
+    } else {
+        return (x as i32) >= other_interval_start;
+    }
+    true
 }
 
 fn is_intersection_match(
