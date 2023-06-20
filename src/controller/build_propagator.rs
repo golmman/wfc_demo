@@ -1,12 +1,21 @@
+use log::info;
+
 use crate::model::pattern_data::Pattern;
 use crate::model::pattern_data::PatternData;
 use crate::model::pattern_propagator::PatternPixel;
 use crate::model::pattern_propagator::PatternPropagator2;
+use crate::view::progress_bar::end_progress_bar;
+use crate::view::progress_bar::print_progress_bar;
+use crate::view::progress_bar::start_progress_bar;
+
+const CURSOR_UP_LEFT: &'static str = "\x1b[1F";
+const ERASE_TO_EOL: &'static str = "\x1b[0K";
 
 pub fn build_propagator(pattern_data: PatternData) -> PatternPropagator2 {
+    info!("building propagator...");
     let propagator = initialize_pixels(pattern_data);
-
     let propagator = calculate_propagator_relationships(propagator);
+    info!("done!");
 
     propagator
 }
@@ -59,24 +68,29 @@ fn calculate_propagator_relationships(
         ..
     } = *pattern_data;
 
+    start_progress_bar();
     for this_pattern_index in 0..patterns.len() {
-        println!("{}", this_pattern_index);
         let this_colors = &patterns[this_pattern_index].pixels;
         for y1 in 0..pattern_height {
             for x1 in 0..pattern_width {
-                let relationships = calculate_pixel_relationships(
-                    pattern_data,
-                    this_colors,
-                    x1,
-                    y1,
-                );
+                let relationships =
+                    calculate_pixel_relationships(pattern_data, this_colors, x1, y1);
 
                 let pi = pattern_data.get_pixel_index(this_pattern_index, x1, y1);
 
                 pattern_propagator.pattern_pixels[pi].relationships = relationships;
             }
         }
+
+        //println!(
+        //    "{}{}{}%",
+        //    CURSOR_UP_LEFT,
+        //    "a".repeat(this_pattern_index),
+        //    100 * (this_pattern_index + 1) / pattern_data.patterns.len()
+        //);
+        print_progress_bar(100 * (this_pattern_index + 1) / pattern_data.patterns.len());
     }
+    end_progress_bar();
 
     pattern_propagator
 }
@@ -145,7 +159,7 @@ fn calculate_pixel_relationships(
 fn is_inside_interval_intersection(x: u32, other_interval_start: i32, width: u32) -> bool {
     if other_interval_start < 0 {
         return (x as i32) < other_interval_start + width as i32;
-    } else {
+    } else if other_interval_start > 0 {
         return (x as i32) >= other_interval_start;
     }
     true
