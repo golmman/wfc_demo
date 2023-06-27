@@ -4,12 +4,12 @@ use log::info;
 
 use crate::model::args::Args;
 use crate::model::pattern_data::PatternData;
-use crate::model::pattern_propagator::PatternPropagator;
-use crate::model::raw_image::RawImage;
+use crate::model::image::RawImage;
 use crate::model::wave::Wave;
 
 use super::build_propagator::build_propagator;
 use super::extract_patterns::extract_patterns;
+use super::load_image::load_image;
 
 pub fn run<T: AsRef<Path>>(args: Args<T>) -> RawImage {
     let Args {
@@ -20,7 +20,8 @@ pub fn run<T: AsRef<Path>>(args: Args<T>) -> RawImage {
         target_image_height,
     } = args;
 
-    let pattern_data = extract_patterns(path, pattern_width, pattern_height);
+    let image = load_image(path);
+    let pattern_data = extract_patterns(image, pattern_width, pattern_height);
     let pattern_propagator = build_propagator(pattern_data);
     //let wave = initialize_wave(&pattern_propagator, target_image_width, target_image_height); // this is not mentioned in the original implementation
 
@@ -32,28 +33,28 @@ pub fn run<T: AsRef<Path>>(args: Args<T>) -> RawImage {
     combine_observations()
 }
 
-fn initialize_wave(
-    pattern_propagator: &PatternPropagator,
-    target_image_width: u32,
-    target_image_height: u32,
-) -> Wave {
-    info!("initializing wave...");
-
-    let mut wave = Wave {
-        width: target_image_width,
-        height: target_image_height,
-        indices: Vec::new(),
-    };
-
-    for i in 0..(wave.width*wave.height) as usize {
-        wave.indices.push(Vec::new());
-        for j in 0..pattern_propagator.pattern_adjacencies.len() {
-            wave.indices[i].push(j);
-        }
-    }
-
-    wave
-}
+//fn initialize_wave(
+//    pattern_propagator: &PatternPropagator2,
+//    target_image_width: u32,
+//    target_image_height: u32,
+//) -> Wave {
+//    info!("initializing wave...");
+//
+//    let mut wave = Wave {
+//        width: target_image_width,
+//        height: target_image_height,
+//        indices: Vec::new(),
+//    };
+//
+//    for i in 0..(wave.width*wave.height) as usize {
+//        wave.indices.push(Vec::new());
+//        for j in 0..pattern_propagator.pattern_adjacencies.len() {
+//            wave.indices[i].push(j);
+//        }
+//    }
+//
+//    wave
+//}
 
 //fn build_propagator(pattern_data: PatternData) -> PatternPropagator {
 //    PatternPropagator::new(pattern_data)
@@ -78,6 +79,8 @@ fn combine_observations() -> RawImage {
     helper::load_image_raw("data/flowers.png")
 }
 
+
+// TODO: remove?
 mod helper {
     use super::*;
 

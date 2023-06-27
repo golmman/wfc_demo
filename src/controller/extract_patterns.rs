@@ -1,20 +1,25 @@
 use std::collections::HashSet;
 use std::path::Path;
 
+use crate::controller::load_image::load_image;
+use crate::model::image::Image;
 use crate::model::pattern_data::Pattern;
 use crate::model::pattern_data::PatternData;
-use crate::model::raw_image::RawImage;
+use crate::model::image::RawImage;
 
-use image::GenericImageView;
 use log::info;
 
-pub fn extract_patterns<T: AsRef<Path>>(
-    path: T,
+pub fn extract_patterns(
+    image: Image,
     pattern_width: u32,
     pattern_height: u32,
 ) -> PatternData {
     let mut pattern_set: HashSet<Pattern> = HashSet::new();
-    let (image_width, image_height, image_data) = load_image(path);
+    let Image {
+        width: image_width,
+        height: image_height,
+        data: image_data,
+    } = image;
 
     for image_y in 0..image_width {
         for image_x in 0..image_height {
@@ -66,28 +71,23 @@ pub fn extract_patterns<T: AsRef<Path>>(
     }
 }
 
-fn load_image_raw<T: AsRef<Path>>(path: T) -> RawImage {
-    let img = image::open(path).unwrap();
-    let (width, height) = img.dimensions();
-    let raw = img.into_bytes();
-    (width, height, raw)
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-fn load_image<T: AsRef<Path>>(path: T) -> (u32, u32, Vec<u32>) {
-    let (width, height, raw32bit) = load_image_raw(path);
-    let mut data = vec![0; (width * height) as usize];
+    #[test]
+    fn it_extracts_patterns() {
+        let image = load_image("./data/flowers.png");
+        let image_size = image.width * image.height;
+        let pattern_data = extract_patterns(image, 3, 3);
+        let total_unique_patterns = 76;
 
-    for y in 0..height {
-        for x in 0..width {
-            let i = (width * y + x) as usize;
-            let rgba = (raw32bit[4 * i] as u32)
-                | (raw32bit[4 * i + 1] as u32) << 8
-                | (raw32bit[4 * i + 2] as u32) << 16
-                | (raw32bit[4 * i + 3] as u32) << 24;
-
-            data[i] = rgba;
+        let mut weight_sum = 0;
+        for i in 0..pattern_data.patterns.len() {
+            weight_sum += pattern_data.patterns[i].weight;
         }
-    }
 
-    (width, height, data)
+        assert_eq!(pattern_data.patterns.len(), total_unique_patterns);
+        assert_eq!(weight_sum, image_size);
+    }
 }

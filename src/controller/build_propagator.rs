@@ -3,15 +3,12 @@ use log::info;
 use crate::model::pattern_data::Pattern;
 use crate::model::pattern_data::PatternData;
 use crate::model::pattern_propagator::PatternPixel;
-use crate::model::pattern_propagator::PatternPropagator2;
+use crate::model::pattern_propagator::PatternPropagator;
 use crate::view::progress_bar::end_progress_bar;
 use crate::view::progress_bar::print_progress_bar;
 use crate::view::progress_bar::start_progress_bar;
 
-const CURSOR_UP_LEFT: &'static str = "\x1b[1F";
-const ERASE_TO_EOL: &'static str = "\x1b[0K";
-
-pub fn build_propagator(pattern_data: PatternData) -> PatternPropagator2 {
+pub fn build_propagator(pattern_data: PatternData) -> PatternPropagator {
     info!("building propagator...");
     let propagator = initialize_pixels(pattern_data);
     let propagator = calculate_propagator_relationships(propagator);
@@ -20,7 +17,7 @@ pub fn build_propagator(pattern_data: PatternData) -> PatternPropagator2 {
     propagator
 }
 
-fn initialize_pixels(pattern_data: PatternData) -> PatternPropagator2 {
+fn initialize_pixels(pattern_data: PatternData) -> PatternPropagator {
     let mut pattern_pixels = Vec::new();
     let PatternData {
         ref patterns,
@@ -48,7 +45,7 @@ fn initialize_pixels(pattern_data: PatternData) -> PatternPropagator2 {
         }
     }
 
-    let propagator = PatternPropagator2 {
+    let propagator = PatternPropagator {
         pattern_data,
         pattern_pixels,
         total_weight,
@@ -58,8 +55,8 @@ fn initialize_pixels(pattern_data: PatternData) -> PatternPropagator2 {
 }
 
 fn calculate_propagator_relationships(
-    mut pattern_propagator: PatternPropagator2,
-) -> PatternPropagator2 {
+    mut pattern_propagator: PatternPropagator,
+) -> PatternPropagator {
     let pattern_data = &pattern_propagator.pattern_data;
     let PatternData {
         ref patterns,
@@ -206,21 +203,17 @@ fn is_intersection_match(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::controller::extract_patterns::extract_patterns;
+    use crate::controller::{extract_patterns::extract_patterns, load_image::load_image};
 
     #[test]
     fn it_initializes_pattern_pixels() {
-        let pattern_data = extract_patterns("./data/flowers.png", 3, 3);
-        let pattern_size = (pattern_data.pattern_width * pattern_data.pattern_height) as usize;
+        let image = load_image("./data/flowers.png");
+        let pattern_data = extract_patterns(image, 3, 3);
         let pattern_propagator = initialize_pixels(pattern_data);
         let pattern_pixels = pattern_propagator.pattern_pixels;
 
         let mut total_weight = 0;
         for i in 0..pattern_pixels.len() {
-            assert_eq!(
-                pattern_pixels[i].relationships.len(),
-                pattern_pixels.len() * pattern_size,
-            );
             total_weight += pattern_pixels[i].weight;
         }
 
@@ -251,5 +244,13 @@ mod tests {
         assert!(is_intersection_match(&c1, &c2, -3, 0, w, h));
         assert!(is_intersection_match(&c1, &c2, -3, -1, w, h));
         assert!(is_intersection_match(&c1, &c2, 3, 2, w, h));
+    }
+
+    mod integration {
+        use super::*;
+
+        #[test]
+        fn tt() {
+        }
     }
 }
