@@ -3,17 +3,13 @@ use std::path::Path;
 
 use crate::controller::load_image::load_image;
 use crate::model::image::Image;
+use crate::model::image::RawImage;
 use crate::model::pattern_data::Pattern;
 use crate::model::pattern_data::PatternData;
-use crate::model::image::RawImage;
 
 use log::info;
 
-pub fn extract_patterns(
-    image: Image,
-    pattern_width: u32,
-    pattern_height: u32,
-) -> PatternData {
+pub fn extract_patterns(image: Image, pattern_width: u32, pattern_height: u32) -> PatternData {
     let mut pattern_set: HashSet<Pattern> = HashSet::new();
     let Image {
         width: image_width,
@@ -21,11 +17,11 @@ pub fn extract_patterns(
         data: image_data,
     } = image;
 
-    for image_y in 0..image_width {
-        for image_x in 0..image_height {
+    for image_y in 0..image_height {
+        for image_x in 0..image_width {
             let mut pixels = vec![0; (pattern_width * pattern_height) as usize];
 
-            for pattern_y in 0..pattern_width {
+            for pattern_y in 0..pattern_height {
                 for pattern_x in 0..pattern_width {
                     let scan_x = (image_x + pattern_x) % image_width;
                     let scan_y = (image_y + pattern_y) % image_height;
@@ -80,7 +76,7 @@ mod tests {
         let image = load_image("./data/flowers.png");
         let image_size = image.width * image.height;
         let pattern_data = extract_patterns(image, 3, 3);
-        let total_unique_patterns = 76;
+        let total_unique_patterns = 92;
 
         let mut weight_sum = 0;
         for i in 0..pattern_data.patterns.len() {
@@ -89,5 +85,71 @@ mod tests {
 
         assert_eq!(pattern_data.patterns.len(), total_unique_patterns);
         assert_eq!(weight_sum, image_size);
+    }
+
+    #[test]
+    fn it_extracts_patterns_without_duplicates() {
+        let pattern_width = 3;
+        let pattern_height = 2;
+        let image = Image {
+            width: 4,
+            height: 3,
+            #[rustfmt::skip]
+            data: vec![
+                0, 1, 2, 3,
+                4, 5, 6, 7,
+                8, 9, 10, 11,
+            ],
+        };
+
+        let pattern_data = extract_patterns(image, pattern_width, pattern_height);
+        assert_eq!(pattern_data.patterns.len(), 12);
+        for i in 0..pattern_data.patterns.len() {
+            assert_eq!(pattern_data.patterns[i].weight, 1);
+        }
+    }
+
+    #[test]
+    fn it_extracts_patterns_with_all_duplicates() {
+        let pattern_width = 3;
+        let pattern_height = 2;
+        let image = Image {
+            width: 4,
+            height: 3,
+            #[rustfmt::skip]
+            data: vec![
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+            ],
+        };
+
+        let pattern_data = extract_patterns(image, pattern_width, pattern_height);
+        assert_eq!(pattern_data.patterns.len(), 1);
+        for i in 0..pattern_data.patterns.len() {
+            assert_eq!(pattern_data.patterns[i].weight, 12);
+        }
+    }
+
+    #[test]
+    fn it_extracts_patterns_with_half_duplicates() {
+        let pattern_width = 3;
+        let pattern_height = 2;
+        let image = Image {
+            width: 4,
+            height: 3,
+            #[rustfmt::skip]
+            data: vec![
+                0, 1, 0, 1,
+                2, 3, 2, 3,
+                4, 5, 4, 5,
+            ],
+        };
+
+        let pattern_data = extract_patterns(image, pattern_width, pattern_height);
+        assert_eq!(pattern_data.patterns.len(), 6);
+        for i in 0..pattern_data.patterns.len() {
+            assert_eq!(pattern_data.patterns[i].weight, 2);
+        }
     }
 }
