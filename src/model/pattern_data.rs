@@ -16,19 +16,6 @@ pub struct Pattern {
     pub weight: u32,
 }
 
-impl PartialEq for Pattern {
-    fn eq(&self, other: &Self) -> bool {
-        self.pixels == other.pixels
-    }
-}
-impl Eq for Pattern {}
-
-impl Hash for Pattern {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.pixels.hash(state);
-    }
-}
-
 impl PatternData {
     pub fn get_pixel_index(&self, pattern_index: usize, x: u32, y: u32) -> usize {
         let p = pattern_index;

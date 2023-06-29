@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::path::Path;
 
 use crate::controller::load_image::load_image;
@@ -10,7 +10,8 @@ use crate::model::pattern_data::PatternData;
 use log::info;
 
 pub fn extract_patterns(image: Image, pattern_width: u32, pattern_height: u32) -> PatternData {
-    let mut pattern_set: HashSet<Pattern> = HashSet::new();
+    let mut pattern_index_map: HashMap<Vec<u32>, usize> = HashMap::new();
+    let mut patterns: Vec<Pattern> = Vec::new();
     let Image {
         width: image_width,
         height: image_height,
@@ -31,16 +32,14 @@ pub fn extract_patterns(image: Image, pattern_width: u32, pattern_height: u32) -
                 }
             }
 
-            let mut pattern = Pattern { pixels, weight: 1 };
-            if let Some(p) = pattern_set.get(&pattern) {
-                pattern.weight = p.weight + 1;
+            if let Some(i) = pattern_index_map.get(&pixels) {
+                patterns[*i].weight += 1;
+            } else {
+                pattern_index_map.insert(pixels.clone(), patterns.len());
+                patterns.push(Pattern { pixels, weight: 1 });
             }
-
-            pattern_set.replace(pattern);
         }
     }
-
-    let patterns: Vec<Pattern> = pattern_set.into_iter().collect();
 
     let mut weight_sum = 0;
     for i in 0..patterns.len() {
@@ -56,8 +55,6 @@ pub fn extract_patterns(image: Image, pattern_width: u32, pattern_height: u32) -
         "sum of pattern weights: {} (should equal image_w * image_h)",
         weight_sum
     );
-
-    println!("{:?}", patterns);
 
     PatternData {
         patterns,

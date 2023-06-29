@@ -30,7 +30,6 @@ fn initialize_pixels(pattern_data: PatternData) -> PatternPropagator {
     let total_weight = pattern_size * image_width * image_height;
 
     for i in 0..patterns.len() {
-        println!("{:?}", patterns[i].pixels);
         for y in 0..pattern_height {
             for x in 0..pattern_width {
                 let j = (pattern_width * y + x) as usize;
