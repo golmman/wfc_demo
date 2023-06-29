@@ -57,6 +57,8 @@ pub fn extract_patterns(image: Image, pattern_width: u32, pattern_height: u32) -
         weight_sum
     );
 
+    println!("{:?}", patterns);
+
     PatternData {
         patterns,
         // TODO: is this additional data even needed?

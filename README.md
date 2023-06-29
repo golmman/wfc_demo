@@ -68,9 +68,11 @@ The propagator holds an 8-dimensional array/tensor which is unfolded into the `p
 
 ##### `pattern_pixels`
 
-- p1 = 1st pattern index
-- x1 = 1st pattern pixel x coordinate
-- y1 = 1st pattern pixel y coordinate
+Note that a each point in the pattern image belongs to multiple surrounding patterns if the pattern width or height is greater than one. So in order to identify a pattern pixel uniquely we need the pattern index and the coordinates inside the pattern.
+
+- p1 = 1st pattern index (< image width * height)
+- x1 = 1st pattern pixel x coordinate (< pattern width)
+- y1 = 1st pattern pixel y coordinate (< pattern height)
 
 The 3-dimensions are only used during the initialization phase, later `pattern_pixels` are accessed as a 1-dimensional array where (p1, x1, y1) is collapsed to the pixel index.
 
@@ -90,6 +92,11 @@ The 5-dimensions are only used during the initialization phase, later `relations
 - as a 2-dimensional array (3d-`pattern_pixels`, each storing 5d-`relationships`)
 - which are accessed like a 4-dimensional array (1d-`pattern_pixels`, 3d-`relationships`)
 - the 8-dimensionality is only relevant during initialization
+- if no deduplication are possible the number of patterns equals image width * height
+  - let iw and ih be the image width and height
+  - let pw and ph be the pattern width and height
+  - then the 8-dim array has at most `(iw * ih)^2 * (pw * ph)^3` elements
+  - for iw=15, ih=24 and pw=ph=3 that is 94478400 elements or ~94mb if each element is a byte
 
 ##### Algorithm
 

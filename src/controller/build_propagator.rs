@@ -30,9 +30,11 @@ fn initialize_pixels(pattern_data: PatternData) -> PatternPropagator {
     let total_weight = pattern_size * image_width * image_height;
 
     for i in 0..patterns.len() {
+        println!("{:?}", patterns[i].pixels);
         for y in 0..pattern_height {
             for x in 0..pattern_width {
                 let j = (pattern_width * y + x) as usize;
+                //println!("{:?}", pattern_data.get_pixel_index(i, x, y));
                 pattern_pixels.push(PatternPixel {
                     color: patterns[i].pixels[j],
                     colors: patterns[i].pixels.clone(),
@@ -79,13 +81,7 @@ fn calculate_propagator_relationships(
             }
         }
 
-        //println!(
-        //    "{}{}{}%",
-        //    CURSOR_UP_LEFT,
-        //    "a".repeat(this_pattern_index),
-        //    100 * (this_pattern_index + 1) / pattern_data.patterns.len()
-        //);
-        print_progress_bar(100 * (this_pattern_index + 1) / pattern_data.patterns.len());
+        print_progress_bar(100 * (this_pattern_index + 1) / patterns.len());
     }
     end_progress_bar();
 
@@ -203,7 +199,8 @@ fn is_intersection_match(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::controller::{extract_patterns::extract_patterns, load_image::load_image};
+    use crate::controller::extract_patterns::extract_patterns;
+    use crate::controller::load_image::load_image;
 
     #[test]
     fn it_initializes_pattern_pixels() {
@@ -247,10 +244,38 @@ mod tests {
     }
 
     mod integration {
+        use crate::model::image::Image;
+
         use super::*;
 
         #[test]
-        fn tt() {
+        fn it_builds_a_propagator_from_a_simple_example() {
+            let pattern_width = 3;
+            let pattern_height = 2;
+            let image = Image {
+                width: 4,
+                height: 3,
+                #[rustfmt::skip]
+                data: vec![
+                    0, 0, 0, 0,
+                    0, 1, 1, 1,
+                    0, 1, 2, 0,
+                ],
+            };
+
+            let pattern_data = extract_patterns(image, pattern_width, pattern_height);
+
+            // make sure there are no deduplcations to make calculating the pattern index easier
+            assert_eq!(
+                pattern_data.patterns.len(),
+                (pattern_data.image_width * pattern_data.image_height) as usize,
+            );
+
+            let propagator = build_propagator(pattern_data);
+
+            let pi = propagator.pattern_data.get_pixel_index(5, 0, 1);
+            println!("{:?}", propagator.pattern_pixels[pi].colors);
+            //assert_eq!(propagator.pattern_pixels[pi].color, 1)
         }
     }
 }
