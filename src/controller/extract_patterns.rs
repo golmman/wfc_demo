@@ -87,6 +87,39 @@ mod tests {
     }
 
     #[test]
+    fn it_extracts_patterns_in_proper_order() {
+        let pattern_width = 3;
+        let pattern_height = 2;
+        let image = Image {
+            width: 4,
+            height: 3,
+            #[rustfmt::skip]
+            data: vec![
+                0, 1, 2, 3,
+                4, 5, 6, 7,
+                8, 9, 10, 11,
+            ],
+        };
+
+        let pattern_data = extract_patterns(image, pattern_width, pattern_height);
+
+        assert_eq!(pattern_data.patterns[0].pixels, vec![0, 1, 2, 4, 5, 6]);
+        assert_eq!(pattern_data.patterns[1].pixels, vec![1, 2, 3, 5, 6, 7]);
+        assert_eq!(pattern_data.patterns[2].pixels, vec![2, 3, 0, 6, 7, 4]);
+        assert_eq!(pattern_data.patterns[3].pixels, vec![3, 0, 1, 7, 4, 5]);
+
+        assert_eq!(pattern_data.patterns[4].pixels, vec![4, 5, 6, 8, 9, 10]);
+        assert_eq!(pattern_data.patterns[5].pixels, vec![5, 6, 7, 9, 10, 11]);
+        assert_eq!(pattern_data.patterns[6].pixels, vec![6, 7, 4, 10, 11, 8]);
+        assert_eq!(pattern_data.patterns[7].pixels, vec![7, 4, 5, 11, 8, 9]);
+
+        assert_eq!(pattern_data.patterns[8].pixels, vec![8, 9 , 10, 0, 1, 2]);
+        assert_eq!(pattern_data.patterns[9].pixels, vec![9, 10, 11, 1, 2, 3]);
+        assert_eq!(pattern_data.patterns[10].pixels, vec![10, 11, 8, 2, 3, 0]);
+        assert_eq!(pattern_data.patterns[11].pixels, vec![11, 8, 9, 3, 0, 1]);
+    }
+
+    #[test]
     fn it_extracts_patterns_without_duplicates() {
         let pattern_width = 3;
         let pattern_height = 2;
