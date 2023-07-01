@@ -247,8 +247,7 @@ mod tests {
 
         use super::*;
 
-        #[test]
-        fn it_builds_a_propagator_from_a_simple_example() {
+        fn build_simple_propagator() -> PatternPropagator {
             let pattern_width = 3;
             let pattern_height = 2;
             let image = Image {
@@ -256,9 +255,9 @@ mod tests {
                 height: 3,
                 #[rustfmt::skip]
                 data: vec![
-                    0, 0, 0, 0,
-                    0, 1, 1, 1,
-                    0, 1, 2, 0,
+                    0, 1, 2, 3,
+                    4, 5, 6, 7,
+                    8, 9, 10, 11,
                 ],
             };
 
@@ -270,11 +269,69 @@ mod tests {
                 (pattern_data.image_width * pattern_data.image_height) as usize,
             );
 
-            let propagator = build_propagator(pattern_data);
+            build_propagator(pattern_data)
+        }
 
+        #[test]
+        fn it_initializes_a_propagator() {
+            let propagator = build_simple_propagator();
+
+            let pi = propagator.pattern_data.get_pixel_index(10, 0, 0);
+            assert_eq!(propagator.pattern_pixels[pi].color, 10);
+            let pi = propagator.pattern_data.get_pixel_index(10, 1, 0);
+            assert_eq!(propagator.pattern_pixels[pi].color, 11);
+            let pi = propagator.pattern_data.get_pixel_index(10, 2, 0);
+            assert_eq!(propagator.pattern_pixels[pi].color, 8);
+            let pi = propagator.pattern_data.get_pixel_index(10, 0, 1);
+            assert_eq!(propagator.pattern_pixels[pi].color, 2);
+            let pi = propagator.pattern_data.get_pixel_index(10, 1, 1);
+            assert_eq!(propagator.pattern_pixels[pi].color, 3);
+            let pi = propagator.pattern_data.get_pixel_index(10, 2, 1);
+            assert_eq!(propagator.pattern_pixels[pi].color, 0);
+
+            let pi = propagator.pattern_data.get_pixel_index(5, 0, 0);
+            assert_eq!(propagator.pattern_pixels[pi].color, 5);
+            let pi = propagator.pattern_data.get_pixel_index(5, 1, 0);
+            assert_eq!(propagator.pattern_pixels[pi].color, 6);
+            let pi = propagator.pattern_data.get_pixel_index(5, 2, 0);
+            assert_eq!(propagator.pattern_pixels[pi].color, 7);
             let pi = propagator.pattern_data.get_pixel_index(5, 0, 1);
-            println!("{:?}", propagator.pattern_pixels[pi].colors);
-            //assert_eq!(propagator.pattern_pixels[pi].color, 1)
+            assert_eq!(propagator.pattern_pixels[pi].color, 9);
+            let pi = propagator.pattern_data.get_pixel_index(5, 1, 1);
+            assert_eq!(propagator.pattern_pixels[pi].color, 10);
+            let pi = propagator.pattern_data.get_pixel_index(5, 2, 1);
+            assert_eq!(propagator.pattern_pixels[pi].color, 11);
+        }
+
+        #[test]
+        fn it_calculates_the_relationships_for_a_propagator() {
+            let propagator = build_simple_propagator();
+
+            let pi = propagator.pattern_data.get_pixel_index(5, 0, 0);
+            let ri = propagator.pattern_data.get_relationship_index(5, 1, 0, 1, 0);
+            assert!(propagator.pattern_pixels[pi].relationships[ri]);
+
+            let pi = propagator.pattern_data.get_pixel_index(5, 0, 0);
+            let ri = propagator.pattern_data.get_relationship_index(6, 0, 0, 1, 0);
+            // note that pixels are NOT adjacent
+            assert!(!propagator.pattern_pixels[pi].relationships[ri]);
+
+            let pi = propagator.pattern_data.get_pixel_index(5, 1, 0);
+            let ri = propagator.pattern_data.get_relationship_index(4, 1, 0, 0, 0);
+            assert!(propagator.pattern_pixels[pi].relationships[ri]);
+
+            let pi = propagator.pattern_data.get_pixel_index(1, 0, 0);
+            let ri = propagator.pattern_data.get_relationship_index(1, 1, 1, 1, 1);
+            assert!(propagator.pattern_pixels[pi].relationships[ri]);
+
+            let pi = propagator.pattern_data.get_pixel_index(1, 1, 1);
+            let ri = propagator.pattern_data.get_relationship_index(5, 2, 0, 2, 1);
+            assert!(propagator.pattern_pixels[pi].relationships[ri]);
+
+            let pi = propagator.pattern_data.get_pixel_index(1, 1, 1);
+            let ri = propagator.pattern_data.get_relationship_index(5, 2, 0, 0, 1);
+            // note that the pattern image does not allow the 6 to be right of the 7
+            assert!(!propagator.pattern_pixels[pi].relationships[ri]);
         }
     }
 }
