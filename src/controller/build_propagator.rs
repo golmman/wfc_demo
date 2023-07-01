@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use log::info;
 
 use crate::model::pattern_data::Pattern;
@@ -10,9 +12,12 @@ use crate::view::progress_bar::start_progress_bar;
 
 pub fn build_propagator(pattern_data: PatternData) -> PatternPropagator {
     info!("building propagator...");
+    let now = Instant::now();
+
     let propagator = initialize_pixels(pattern_data);
     let propagator = calculate_propagator_relationships(propagator);
-    info!("done!");
+
+    info!("  done, took {} ms", now.elapsed().as_millis());
 
     propagator
 }
@@ -202,7 +207,7 @@ mod tests {
     use crate::controller::load_image::load_image;
 
     #[test]
-    fn it_initializes_pattern_pixels() {
+    fn it_initializes_pattern_pixel_weights() {
         let image = load_image("./data/flowers.png");
         let pattern_data = extract_patterns(image, 3, 3);
         let pattern_propagator = initialize_pixels(pattern_data);

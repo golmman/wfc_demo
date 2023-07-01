@@ -9,6 +9,7 @@ use crate::model::wave::Wave;
 
 use super::build_propagator::build_propagator;
 use super::extract_patterns::extract_patterns;
+use super::initialize_wave::initialize_wave;
 use super::load_image::load_image;
 
 pub fn run<T: AsRef<Path>>(args: Args<T>) -> RawImage {
@@ -21,9 +22,10 @@ pub fn run<T: AsRef<Path>>(args: Args<T>) -> RawImage {
     } = args;
 
     let image = load_image(path);
+
     let pattern_data = extract_patterns(image, pattern_width, pattern_height);
     let pattern_propagator = build_propagator(pattern_data);
-    //let wave = initialize_wave(&pattern_propagator, target_image_width, target_image_height); // this is not mentioned in the original implementation
+    let wave = initialize_wave(&pattern_propagator, target_image_width, target_image_height);
 
     for i in 0..10 {
         observe();
@@ -32,33 +34,6 @@ pub fn run<T: AsRef<Path>>(args: Args<T>) -> RawImage {
 
     combine_observations()
 }
-
-//fn initialize_wave(
-//    pattern_propagator: &PatternPropagator2,
-//    target_image_width: u32,
-//    target_image_height: u32,
-//) -> Wave {
-//    info!("initializing wave...");
-//
-//    let mut wave = Wave {
-//        width: target_image_width,
-//        height: target_image_height,
-//        indices: Vec::new(),
-//    };
-//
-//    for i in 0..(wave.width*wave.height) as usize {
-//        wave.indices.push(Vec::new());
-//        for j in 0..pattern_propagator.pattern_adjacencies.len() {
-//            wave.indices[i].push(j);
-//        }
-//    }
-//
-//    wave
-//}
-
-//fn build_propagator(pattern_data: PatternData) -> PatternPropagator {
-//    PatternPropagator::new(pattern_data)
-//}
 
 fn observe() {}
 

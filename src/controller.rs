@@ -13,6 +13,7 @@ use crate::view::renderer::Renderer;
 
 pub mod build_propagator;
 pub mod extract_patterns;
+pub mod initialize_wave;
 pub mod load_image;
 pub mod wfc;
 

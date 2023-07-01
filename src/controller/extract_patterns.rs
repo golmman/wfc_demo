@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::path::Path;
+use std::time::Instant;
 
 use crate::controller::load_image::load_image;
 use crate::model::image::Image;
@@ -10,6 +11,9 @@ use crate::model::pattern_data::PatternData;
 use log::info;
 
 pub fn extract_patterns(image: Image, pattern_width: u32, pattern_height: u32) -> PatternData {
+    info!("extracting patterns...");
+    let now = Instant::now();
+
     let mut pattern_index_map: HashMap<Vec<u32>, usize> = HashMap::new();
     let mut patterns: Vec<Pattern> = Vec::new();
     let Image {
@@ -46,13 +50,14 @@ pub fn extract_patterns(image: Image, pattern_width: u32, pattern_height: u32) -
         weight_sum += patterns[i].weight;
     }
 
-    info!("pattern width: {}", pattern_width);
-    info!("pattern height: {}", pattern_height);
-    info!("image width: {}", image_width);
-    info!("image height: {}", image_height);
-    info!("number of unique patterns: {}", patterns.len());
+    info!("  done, took {} ms", now.elapsed().as_millis());
+    info!("  pattern width: {}", pattern_width);
+    info!("  pattern height: {}", pattern_height);
+    info!("  image width: {}", image_width);
+    info!("  image height: {}", image_height);
+    info!("  number of unique patterns: {}", patterns.len());
     info!(
-        "sum of pattern weights: {} (should equal image_w * image_h)",
+        "  sum of pattern weights: {} (should equal image_w * image_h)",
         weight_sum
     );
 
