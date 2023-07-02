@@ -2,6 +2,7 @@ use log::info;
 
 use super::pattern_data::PatternData;
 
+#[derive(Clone)]
 pub struct PatternPixel {
     pub color: u32,
     pub colors: Vec<u32>,

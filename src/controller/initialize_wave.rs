@@ -29,3 +29,50 @@ pub fn initialize_wave(
         indices,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::model::pattern_data::PatternData;
+    use crate::model::pattern_propagator::PatternPixel;
+
+    use super::*;
+
+    #[test]
+    fn it_initializes_the_wave() {
+        let propagator = PatternPropagator {
+            pattern_data: PatternData {
+                image_height: 0,
+                image_width: 0,
+                pattern_height: 0,
+                pattern_width: 0,
+                patterns: Vec::new(),
+            },
+            pattern_pixels: vec![
+                PatternPixel {
+                    color: 0,
+                    y: 0,
+                    x: 0,
+                    weight: 0,
+                    colors: Vec::new(),
+                    relationships: Vec::new(),
+                };
+                10
+            ],
+            total_weight: 1,
+        };
+
+        let wave = initialize_wave(&propagator, 7, 7);
+
+        assert_eq!(wave.indices[0][3], 3);
+        assert_eq!(wave.indices[4][3], 3);
+        assert_eq!(wave.indices[6][3], 3);
+        assert_eq!(wave.indices[8][3], 3);
+        assert_eq!(wave.indices[48][3], 3);
+
+        assert_eq!(wave.indices[0][7], 7);
+        assert_eq!(wave.indices[4][7], 7);
+        assert_eq!(wave.indices[6][7], 7);
+        assert_eq!(wave.indices[8][7], 7);
+        assert_eq!(wave.indices[48][7], 7);
+    }
+}
