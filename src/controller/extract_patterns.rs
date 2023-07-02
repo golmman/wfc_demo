@@ -1,10 +1,7 @@
 use std::collections::HashMap;
-use std::path::Path;
 use std::time::Instant;
 
-use crate::controller::load_image::load_image;
 use crate::model::image::Image;
-use crate::model::image::RawImage;
 use crate::model::pattern_data::Pattern;
 use crate::model::pattern_data::PatternData;
 
@@ -73,6 +70,8 @@ pub fn extract_patterns(image: Image, pattern_width: u32, pattern_height: u32) -
 
 #[cfg(test)]
 mod tests {
+    use crate::controller::load_image::load_image;
+
     use super::*;
 
     #[test]
@@ -118,7 +117,7 @@ mod tests {
         assert_eq!(pattern_data.patterns[6].pixels, vec![6, 7, 4, 10, 11, 8]);
         assert_eq!(pattern_data.patterns[7].pixels, vec![7, 4, 5, 11, 8, 9]);
 
-        assert_eq!(pattern_data.patterns[8].pixels, vec![8, 9 , 10, 0, 1, 2]);
+        assert_eq!(pattern_data.patterns[8].pixels, vec![8, 9, 10, 0, 1, 2]);
         assert_eq!(pattern_data.patterns[9].pixels, vec![9, 10, 11, 1, 2, 3]);
         assert_eq!(pattern_data.patterns[10].pixels, vec![10, 11, 8, 2, 3, 0]);
         assert_eq!(pattern_data.patterns[11].pixels, vec![11, 8, 9, 3, 0, 1]);

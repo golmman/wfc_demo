@@ -1,6 +1,3 @@
-use std::hash::Hash;
-use std::hash::Hasher;
-
 pub struct PatternData {
     pub image_height: u32,
     pub image_width: u32,

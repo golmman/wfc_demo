@@ -1,5 +1,3 @@
-use log::info;
-
 use super::pattern_data::PatternData;
 
 #[derive(Clone)]

@@ -1,4 +1,3 @@
-use controller::Controller;
 use model::args::Args;
 
 pub mod controller;

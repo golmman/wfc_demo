@@ -2,7 +2,6 @@ use std::time::Instant;
 
 use log::info;
 
-use crate::model::pattern_data::Pattern;
 use crate::model::pattern_data::PatternData;
 use crate::model::pattern_propagator::PatternPixel;
 use crate::model::pattern_propagator::PatternPropagator;
@@ -313,28 +312,40 @@ mod tests {
             let propagator = build_simple_propagator();
 
             let pi = propagator.pattern_data.get_pixel_index(5, 0, 0);
-            let ri = propagator.pattern_data.get_relationship_index(5, 1, 0, 1, 0);
+            let ri = propagator
+                .pattern_data
+                .get_relationship_index(5, 1, 0, 1, 0);
             assert!(propagator.pattern_pixels[pi].relationships[ri]);
 
             let pi = propagator.pattern_data.get_pixel_index(5, 0, 0);
-            let ri = propagator.pattern_data.get_relationship_index(6, 0, 0, 1, 0);
+            let ri = propagator
+                .pattern_data
+                .get_relationship_index(6, 0, 0, 1, 0);
             // note that pixels are NOT adjacent
             assert!(!propagator.pattern_pixels[pi].relationships[ri]);
 
             let pi = propagator.pattern_data.get_pixel_index(5, 1, 0);
-            let ri = propagator.pattern_data.get_relationship_index(4, 1, 0, 0, 0);
+            let ri = propagator
+                .pattern_data
+                .get_relationship_index(4, 1, 0, 0, 0);
             assert!(propagator.pattern_pixels[pi].relationships[ri]);
 
             let pi = propagator.pattern_data.get_pixel_index(1, 0, 0);
-            let ri = propagator.pattern_data.get_relationship_index(1, 1, 1, 1, 1);
+            let ri = propagator
+                .pattern_data
+                .get_relationship_index(1, 1, 1, 1, 1);
             assert!(propagator.pattern_pixels[pi].relationships[ri]);
 
             let pi = propagator.pattern_data.get_pixel_index(1, 1, 1);
-            let ri = propagator.pattern_data.get_relationship_index(5, 2, 0, 2, 1);
+            let ri = propagator
+                .pattern_data
+                .get_relationship_index(5, 2, 0, 2, 1);
             assert!(propagator.pattern_pixels[pi].relationships[ri]);
 
             let pi = propagator.pattern_data.get_pixel_index(1, 1, 1);
-            let ri = propagator.pattern_data.get_relationship_index(5, 2, 0, 0, 1);
+            let ri = propagator
+                .pattern_data
+                .get_relationship_index(5, 2, 0, 0, 1);
             // note that the pattern image does not allow the 6 to be right of the 7
             assert!(!propagator.pattern_pixels[pi].relationships[ri]);
         }

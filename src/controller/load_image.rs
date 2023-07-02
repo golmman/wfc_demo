@@ -28,7 +28,7 @@ pub fn load_image<T: AsRef<Path>>(path: T) -> Image {
     }
 }
 
-fn load_image_raw<T: AsRef<Path>>(path: T) -> RawImage {
+pub fn load_image_raw<T: AsRef<Path>>(path: T) -> RawImage {
     let img = image::open(path).unwrap();
     let (width, height) = img.dimensions();
     let raw = img.into_bytes();

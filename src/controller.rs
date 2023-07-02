@@ -1,7 +1,3 @@
-use std::path::Path;
-
-use image::GenericImageView;
-
 use term2d::model::event::Event;
 use term2d::model::image::Image;
 use term2d::model::key::Key;
@@ -63,11 +59,4 @@ impl term2d::controller::Controller<HalfblockCanvas> for Controller {
     fn get_canvas(&mut self) -> &mut HalfblockCanvas {
         &mut self.renderer.canvas
     }
-}
-
-fn load_image_raw<T: AsRef<Path>>(path: T) -> (u32, u32, Vec<u8>) {
-    let img = image::open(path).unwrap();
-    let (width, height) = img.dimensions();
-    let raw = img.into_bytes();
-    (width, height, raw)
 }
