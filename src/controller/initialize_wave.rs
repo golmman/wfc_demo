@@ -18,6 +18,7 @@ pub fn initialize_wave(
         pixel_indices.push(i);
     }
     let indices = vec![pixel_indices; (target_image_width * target_image_height) as usize];
+    let last_index_collapsed = fastrand::usize(..indices.len());
 
     info!("  done, took {} ms", now.elapsed().as_millis());
     info!("  wave width: {}", target_image_width);
@@ -27,6 +28,7 @@ pub fn initialize_wave(
         width: target_image_width,
         height: target_image_height,
         indices,
+        last_index_collapsed,
     }
 }
 

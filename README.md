@@ -175,12 +175,12 @@ Pixels adjacent
 
 #### Output
 
-- `Wave`: matrix with target image size, initialized with a list of all `PatternPropagator` pixels for each entry
+- `Wave`: matrix with target image size, initialized with a list of all `PatternPropagator` pixel indices for each entry
 
 #### Description
 
 - create empty matrix
-- for each entry add the list of `PatternPropagator` pixels
+- for each entry add the list of `PatternPropagator` pixel indices
 
 ### Observe
 
@@ -196,9 +196,10 @@ Pixels adjacent
 
 #### Description
 
-- search for the wave entry with more than 1 list elements left and the lowest shannon entropy
-  - loop over all entries
+- search for a wave entry with more than 1 list elements and the lowest shannon entropy
+  - loop over all entries in the 8-neighborhood of the last collapsed wave element
   - skip iteration if entry is a list of 1 element
+    - if all entries in the 8-neighborhood are single-element, loop over all elements
   - calculate the shannon entropy and update best entry variable if lower
     - let p_i be the probability of a propagator pixel, then the shannon entropy is calculated as -sum_i(p_i \* log(p_i))
   - if all entries have only one list element left exit the outer loop, i.e. jump to `combine_observations`

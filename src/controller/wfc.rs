@@ -2,6 +2,7 @@ use std::path::Path;
 
 use crate::model::args::Args;
 use crate::model::image::RawImage;
+use crate::model::pattern_propagator::PatternPropagator;
 use crate::model::wave::Wave;
 
 use super::build_propagator::build_propagator;
@@ -9,6 +10,7 @@ use super::extract_patterns::extract_patterns;
 use super::initialize_wave::initialize_wave;
 use super::load_image::load_image;
 use super::load_image::load_image_raw;
+use super::observe::observe;
 
 pub fn run<T: AsRef<Path>>(args: Args<T>) -> RawImage {
     let Args {
@@ -23,25 +25,14 @@ pub fn run<T: AsRef<Path>>(args: Args<T>) -> RawImage {
 
     let pattern_data = extract_patterns(image, pattern_width, pattern_height);
     let pattern_propagator = build_propagator(pattern_data);
-    let wave = initialize_wave(&pattern_propagator, target_image_width, target_image_height);
+    let mut wave = initialize_wave(&pattern_propagator, target_image_width, target_image_height);
 
     for i in 0..10 {
-        observe();
+        observe(&mut wave, &pattern_propagator);
         propagate();
     }
 
     combine_observations()
-}
-
-fn observe() {}
-
-fn find_lowest_entropy(wave: &Wave) -> Option<usize> {
-    // TODO: speed up with the knowledge of last iteration
-    let lowest_entropy_index = None;
-
-    for i in 0..wave.indices.len() {}
-
-    lowest_entropy_index
 }
 
 fn propagate() {}
