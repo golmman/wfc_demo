@@ -2,14 +2,58 @@ use crate::model::pattern_propagator::PatternPropagator;
 use crate::model::wave::Wave;
 
 pub fn observe(wave: &mut Wave, propagator: &PatternPropagator) {
-    //
+    find_lowest_entropy(wave, propagator);
 }
 
-fn find_lowest_entropy(wave: &Wave) -> Option<usize> {
-    // TODO: speed up with the knowledge of last iteration
-    let lowest_entropy_index = None;
+// TODO: outsource and dry-ify
+fn find_lowest_entropy(wave: &Wave, propagator: &PatternPropagator) -> Option<usize> {
+    let mut lowest_entropy_index = None;
+    let mut lowest_entropy_value = f32::MAX;
+    let total_weight = propagator.total_weight as f32;
+    let collapsed_neighborhood = get_last_collapsed_neighborhood(wave);
 
-    for i in 0..wave.indices.len() {}
+    for k in 0..collapsed_neighborhood.len() {
+        let i = collapsed_neighborhood[k];
+
+        if wave.indices[i].len() == 1 {
+            continue;
+        }
+
+        let mut entropy = 0.0_f32;
+        for j in 0..wave.indices[i].len() {
+            let pi = wave.indices[i][j];
+            let weight = propagator.pattern_pixels[pi].weight as f32;
+            let prob = weight / total_weight;
+            entropy -= (prob * prob.ln());
+        }
+
+        if entropy < lowest_entropy_value {
+            lowest_entropy_index = Some(i);
+            lowest_entropy_value = entropy;
+        }
+    }
+
+    if lowest_entropy_index == None {
+        let mut lowest_entropy_value = f32::MAX;
+        for i in 0..wave.indices.len() {
+            if wave.indices[i].len() == 1 {
+                continue;
+            }
+
+            let mut entropy = 0.0_f32;
+            for j in 0..wave.indices[i].len() {
+                let pi = wave.indices[i][j];
+                let weight = propagator.pattern_pixels[pi].weight as f32;
+                let prob = weight / total_weight;
+                entropy -= (prob * prob.ln());
+            }
+
+            if entropy < lowest_entropy_value {
+                lowest_entropy_index = Some(i);
+                lowest_entropy_value = entropy;
+            }
+        }
+    }
 
     lowest_entropy_index
 }
@@ -84,6 +128,9 @@ fn calculate_adjacent_indices(width: usize, height: usize, index: usize) -> Vec<
 mod tests {
     use std::collections::HashSet;
 
+    use crate::model::pattern_data::PatternData;
+    use crate::model::pattern_propagator::PatternPixel;
+
     use super::*;
 
     #[test]
@@ -131,7 +178,80 @@ mod tests {
         calculate_adjacent_indices(width, height, 100);
     }
 
+    #[test]
+    fn it_finds_the_lowest_entropy_in_an_8_neighborhood() {
+        let propagator = create_propagator_with_simple_weights();
+
+        let wave = Wave {
+            width: 3,
+            height: 2,
+            last_index_collapsed: 0,
+            indices: vec![
+                vec![0],
+                vec![2, 2, 2],
+                vec![4, 1],
+                vec![4, 1, 1],
+                vec![1, 1, 1, 1, 1, 1],
+                vec![0],
+            ],
+        };
+
+        // Note that wave elements in the neighborhood all have a summed weight of 6
+        // but index 3 wins since it is "densest".
+        // Also note that index 2 has lowest (non-singular) global entropy but is not picked
+        // since it is not in the neighborhood.
+        let lowest_entropy_index = find_lowest_entropy(&wave, &propagator);
+        assert_eq!(lowest_entropy_index, Some(3));
+    }
+
+    #[test]
+    fn it_extends_the_lowest_entropy_search_to_the_entire_wave() {
+        let propagator = create_propagator_with_simple_weights();
+
+        let wave = Wave {
+            width: 3,
+            height: 2,
+            last_index_collapsed: 0,
+            indices: vec![vec![0], vec![1], vec![4, 1], vec![1], vec![1], vec![3, 2]],
+        };
+
+        let lowest_entropy_index = find_lowest_entropy(&wave, &propagator);
+        assert_eq!(lowest_entropy_index, Some(2));
+    }
+
     fn set(v: Vec<usize>) -> HashSet<usize> {
         v.into_iter().collect()
+    }
+
+    fn create_pattern_pixel_with_weight(weight: u32) -> PatternPixel {
+        PatternPixel {
+            color: 0,
+            x: 0,
+            y: 0,
+            weight,
+            relationships: Vec::new(),
+            colors: Vec::new(),
+        }
+    }
+
+    fn create_propagator_with_simple_weights() -> PatternPropagator {
+        PatternPropagator {
+            pattern_data: PatternData {
+                image_height: 0,
+                image_width: 0,
+                pattern_height: 0,
+                pattern_width: 0,
+                patterns: Vec::new(),
+            },
+            pattern_pixels: vec![
+                create_pattern_pixel_with_weight(1),
+                create_pattern_pixel_with_weight(1),
+                create_pattern_pixel_with_weight(2),
+                create_pattern_pixel_with_weight(3),
+                create_pattern_pixel_with_weight(4),
+                create_pattern_pixel_with_weight(5),
+            ],
+            total_weight: 16,
+        }
     }
 }
