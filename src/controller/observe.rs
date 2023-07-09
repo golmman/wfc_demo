@@ -3,11 +3,30 @@ use crate::model::wave::Wave;
 
 pub fn observe(wave: &mut Wave, propagator: &PatternPropagator) -> bool {
     if let Some(i) = find_lowest_entropy_index(wave, propagator) {
-        wave.last_index_collapsed = i;
+        collapse_wave_entry(i, wave, propagator);
         return true;
     }
 
     false
+}
+
+fn collapse_wave_entry(index: usize, wave: &mut Wave, propagator: &PatternPropagator) {
+    let mut weighted_pixel_indices = Vec::new();
+
+    for i in 0..wave.indices[index].len() {
+        let pi = wave.indices[index][i];
+        let weight = propagator.pattern_pixels[pi].weight;
+
+        for _j in 0..weight {
+            weighted_pixel_indices.push(pi);
+        }
+    }
+
+    let k = fastrand::usize(..weighted_pixel_indices.len());
+    let chosen_pixel_index = weighted_pixel_indices[k];
+
+    wave.indices[index] = vec![chosen_pixel_index];
+    wave.last_index_collapsed = index;
 }
 
 fn find_lowest_entropy_index(wave: &Wave, propagator: &PatternPropagator) -> Option<usize> {

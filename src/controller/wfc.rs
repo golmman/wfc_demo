@@ -27,8 +27,14 @@ pub fn run<T: AsRef<Path>>(args: Args<T>) -> RawImage {
     let pattern_propagator = build_propagator(pattern_data);
     let mut wave = initialize_wave(&pattern_propagator, target_image_width, target_image_height);
 
-    for i in 0..10 {
-        observe(&mut wave, &pattern_propagator);
+    //for i in 0..10 {
+    //    if !observe(&mut wave, &pattern_propagator) {
+    //        break;
+    //    }
+    //    propagate();
+    //}
+
+    while observe(&mut wave, &pattern_propagator) {
         propagate();
     }
 
