@@ -1,31 +1,28 @@
 use crate::model::pattern_propagator::PatternPropagator;
 use crate::model::wave::Wave;
 
-pub fn observe(wave: &mut Wave, propagator: &PatternPropagator) {
-    find_lowest_entropy(wave, propagator);
+pub fn observe(wave: &mut Wave, propagator: &PatternPropagator) -> bool {
+    if let Some(i) = find_lowest_entropy_index(wave, propagator) {
+        wave.last_index_collapsed = i;
+        return true;
+    }
+
+    false
 }
 
-// TODO: outsource and dry-ify
-fn find_lowest_entropy(wave: &Wave, propagator: &PatternPropagator) -> Option<usize> {
-    let mut lowest_entropy_index = None;
-    let mut lowest_entropy_value = f32::MAX;
+fn find_lowest_entropy_index(wave: &Wave, propagator: &PatternPropagator) -> Option<usize> {
     let total_weight = propagator.total_weight as f32;
     let collapsed_neighborhood = get_last_collapsed_neighborhood(wave);
 
-    for k in 0..collapsed_neighborhood.len() {
-        let i = collapsed_neighborhood[k];
+    let mut lowest_entropy_index = None;
+    let mut lowest_entropy_value = f32::MAX;
 
+    for &i in &collapsed_neighborhood {
         if wave.indices[i].len() == 1 {
             continue;
         }
 
-        let mut entropy = 0.0_f32;
-        for j in 0..wave.indices[i].len() {
-            let pi = wave.indices[i][j];
-            let weight = propagator.pattern_pixels[pi].weight as f32;
-            let prob = weight / total_weight;
-            entropy -= (prob * prob.ln());
-        }
+        let entropy = calculate_entropy(&wave.indices[i], propagator, total_weight);
 
         if entropy < lowest_entropy_value {
             lowest_entropy_index = Some(i);
@@ -33,20 +30,15 @@ fn find_lowest_entropy(wave: &Wave, propagator: &PatternPropagator) -> Option<us
         }
     }
 
-    if lowest_entropy_index == None {
-        let mut lowest_entropy_value = f32::MAX;
-        for i in 0..wave.indices.len() {
-            if wave.indices[i].len() == 1 {
+    if lowest_entropy_index.is_none() {
+        lowest_entropy_value = f32::MAX;
+
+        for (i, indices) in wave.indices.iter().enumerate() {
+            if indices.len() == 1 {
                 continue;
             }
 
-            let mut entropy = 0.0_f32;
-            for j in 0..wave.indices[i].len() {
-                let pi = wave.indices[i][j];
-                let weight = propagator.pattern_pixels[pi].weight as f32;
-                let prob = weight / total_weight;
-                entropy -= (prob * prob.ln());
-            }
+            let entropy = calculate_entropy(indices, propagator, total_weight);
 
             if entropy < lowest_entropy_value {
                 lowest_entropy_index = Some(i);
@@ -56,6 +48,16 @@ fn find_lowest_entropy(wave: &Wave, propagator: &PatternPropagator) -> Option<us
     }
 
     lowest_entropy_index
+}
+
+fn calculate_entropy(indices: &[usize], propagator: &PatternPropagator, total_weight: f32) -> f32 {
+    let mut entropy = 0.0;
+    for &pi in indices {
+        let weight = propagator.pattern_pixels[pi].weight as f32;
+        let prob = weight / total_weight;
+        entropy -= prob * prob.ln();
+    }
+    entropy
 }
 
 fn get_last_collapsed_neighborhood(wave: &Wave) -> Vec<usize> {
@@ -200,7 +202,7 @@ mod tests {
         // but index 3 wins since it is "densest".
         // Also note that index 2 has lowest (non-singular) global entropy but is not picked
         // since it is not in the neighborhood.
-        let lowest_entropy_index = find_lowest_entropy(&wave, &propagator);
+        let lowest_entropy_index = find_lowest_entropy_index(&wave, &propagator);
         assert_eq!(lowest_entropy_index, Some(3));
     }
 
@@ -215,7 +217,7 @@ mod tests {
             indices: vec![vec![0], vec![1], vec![4, 1], vec![1], vec![1], vec![3, 2]],
         };
 
-        let lowest_entropy_index = find_lowest_entropy(&wave, &propagator);
+        let lowest_entropy_index = find_lowest_entropy_index(&wave, &propagator);
         assert_eq!(lowest_entropy_index, Some(2));
     }
 
