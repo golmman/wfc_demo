@@ -11,6 +11,7 @@ use super::initialize_wave::initialize_wave;
 use super::load_image::load_image;
 use super::load_image::load_image_raw;
 use super::observe::observe;
+use super::propagate::propagate;
 
 pub fn run<T: AsRef<Path>>(args: Args<T>) -> RawImage {
     let Args {
@@ -35,13 +36,11 @@ pub fn run<T: AsRef<Path>>(args: Args<T>) -> RawImage {
     //}
 
     while observe(&mut wave, &pattern_propagator) {
-        propagate();
+        propagate(&mut wave, &pattern_propagator);
     }
 
     combine_observations()
 }
-
-fn propagate() {}
 
 fn combine_observations() -> RawImage {
     load_image_raw("data/flowers.png")

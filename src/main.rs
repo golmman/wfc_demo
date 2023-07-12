@@ -12,8 +12,8 @@ fn main() {
         path: "data/flowers.png",
         pattern_width: 3,
         pattern_height: 3,
-        target_image_width: 100,
-        target_image_height: 100,
+        target_image_width: 10,
+        target_image_height: 10,
     };
 
     controller::wfc::run(args);

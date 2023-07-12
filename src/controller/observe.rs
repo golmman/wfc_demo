@@ -21,9 +21,21 @@ fn collapse_wave_entry(index: usize, wave: &mut Wave, propagator: &PatternPropag
             weighted_pixel_indices.push(pi);
         }
     }
-
     let k = fastrand::usize(..weighted_pixel_indices.len());
     let chosen_pixel_index = weighted_pixel_indices[k];
+
+    //let mut heaviest_index = 0;
+    //let mut heaviest_value = 0;
+    //for i in 0..wave.indices[index].len() {
+    //    let pi = wave.indices[index][i];
+    //    let weight = propagator.pattern_pixels[pi].weight;
+
+    //    if weight > heaviest_value {
+    //        heaviest_value = weight;
+    //        heaviest_index = pi;
+    //    }
+    //}
+    //let chosen_pixel_index = heaviest_index;
 
     wave.indices[index] = vec![chosen_pixel_index];
     wave.last_index_collapsed = index;

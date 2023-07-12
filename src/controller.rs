@@ -12,6 +12,7 @@ pub mod extract_patterns;
 pub mod initialize_wave;
 pub mod load_image;
 pub mod observe;
+pub mod propagate;
 pub mod wfc;
 
 pub struct Controller {

@@ -232,6 +232,10 @@ Pixels adjacent
     - for each pattern pixel v of wave entry j
       - if the pattern propagator relationship between u and v is false
         - remove v from wave entry j
+
+  - let remove = vec![8; true];
+  - for each pattern pixel u of wave entry i
+
   - if any remove took place
     - for all 8 neighbors k of index j
       - put (j, k) onto the stack
